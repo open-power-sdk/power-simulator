@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+
+'''
+LICENSE INFORMATION
+
+The Programs listed below are licensed under the following terms and conditions in addition to those of the IBM International License Agreement for Non-Warranted Programs (IBM form number Z125-5589-05).
+Program Name: IBM POWER8 Functional Simulator version 1.0-2
+Program Number: tool
+
+Non-Production Limitation
+If the Program is designated as "Non-Production", the Program can only be deployed as part of the Licensee's internal development and test environment for internal non-production activities, including but not limited to testing, performance tuning, fault diagnosis, internal benchmarking, staging, quality assurance activity and/or developing internally used additions or extensions to the Program using published application programming interfaces. Licensee is not authorized to use any part of the Program for any other purposes without acquiring the appropriate production entitlements.
+
+Development Tool
+This Program is designed to aid in the development of software applications and systems. Licensee is solely responsible for the applications and systems that it develops by using this Program and assumes all risk and responsibility therefor.
+
+Source Components and Sample Materials
+The Program may include some components in source code form ("Source Components") and other materials identified as Sample Materials. Licensee may copy and modify Source Components and Sample Materials for internal use only provided such use is within the limits of the license rights under this Agreement, provided however that Licensee may not alter or delete any copyright information or notices contained in the Source Components or Sample Materials. IBM provides the Source Components and Sample Materials without obligation of support and "AS IS", WITH NO WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING THE WARRANTY OF TITLE, NON-INFRINGEMENT OR NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND CONDITIONS OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+Third Party Data and Services
+The Program may contain links to or be used to access third party data services, databases, web services, software, or other third party content (all, "content"). Access to this content is provided "AS-IS", WITH NO WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING THE WARRANTY OF TITLE, NON-INFRINGEMENT OR NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND CONDITIONS OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. Access can be terminated by the relevant third parties at their sole discretion at any time. Licensee may be required to enter into separate agreements with the third parties for the access to or use of such content. IBM is not a party to any such separate agreements and as an express condition of this license Licensee agrees to comply with the terms of such separate agreements.
+
+L/N: L-LJLT-9Q4D8R
+D/N: L-LJLT-9Q4D8R
+P/N: L-LJLT-9Q4D8R
+
+Contributors: 
+	Rafael Peria de Sene <rpsene@br.ibm.com> - Initial Implementation
+'''
+
+import sys
+import os
+import pwd
+
+
+class startsimulator():
+
+	#get username
+	def getUserName(self):
+	        return pwd.getpwuid(os.getuid())[0]
+
+	#set the tap0 network interface
+	def setNetwork(self):
+		os.system ("clear")
+    		print "nConfiguring network...\n"
+    		os.system ("sudo tunctl -u " + self.getUserName() + " -t tap0")
+		os.system ("sudo ifconfig tap0 172.19.98.108 netmask 255.255.255.254")
+		os.system ("sudo iptables -t nat -A POSTROUTING -j MASQUERADE")
+		os.system ("sudo iptables -I FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
+		os.system ("sudo iptables -I FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT")
+		os.system ("sudo sysctl -w net.ipv4.ip_forward=1 $2>&1")
+		os.system ("sudo -k")
+
+	#unset the tap0 network interface
+	def unsetNetwork(self):
+		os.system ("clear")
+		print "\nRemoving network configuration...\n"
+		os.system("sudo tunctl -d tap0")
+		os.system("sudo iptables -D FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
+		os.system("sudo iptables -D FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT")
+		os.system("sudo iptables -t nat -D POSTROUTING -j MASQUERADE")
+		os.system("sudo -k")
+
+	#start the simulator
+	def startSimulator(self):
+		os.system("clear")
+		if len(sys.argv) > 2 or len(sys.argv) < 2:
+        		print "\n Run this script using either of the options:"
+        		print " * startsimulator [-p8 or -p9]"
+        		sys.exit()
+    		else:
+
+			print " \nThis script starts the Power Functional Simulator and sets "
+			print " a tap0 interface and all required iptables rules.\n"
+			print " NOTE: when the boot is complete access the simulator via ssh: "
+			print " 	ssh root@172.19.98.109 / pass: mambo\n"
+
+			if str(sys.argv[1]) == "-p8":
+				self.setNetwork()
+				os.system("/opt/ibm/systemsim-p8/run/pegasus/power8 -W -f /opt/ibm/systemsim-p8/run/pegasus/linux/boot-linux-le.tcl")
+				self.unsetNetwork()
+			elif str(sys.argv[1]) == "-p9":
+				self.setNetwork()
+				os.system("/opt/ibm/systemsim-p9/run/p9/power9 -W -f /opt/ibm/systemsim-p9/run/p9/linux/boot-linux-le-skiboot.tcl")
+				self.unsetNetwork()
+			else:
+				print "Could not execute this script."
+				sys.exit()
+
+
+'''
+#############  Here starts the main execution #############
+'''
+
+
+try:
+	startsimulator().startSimulator()
+except:
+	sys.exit()

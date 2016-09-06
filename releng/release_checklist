@@ -1,0 +1,60 @@
+sdk-systemsim release checklist
+
+Every public release of this software requires attention to a set of paths which
+must be verified in order to ensure the correct execution.
+.
+├── LICENSE
+├── packages
+│   ├── checksum (1)
+│   ├── license
+│   ├── rootfsfiles (2)
+│   └── p8_simulator (3)
+│   └── p9_simulator (3)
+├── README.md
+├── releng
+│   ├── build.sh
+│   ├── release_checklist
+├── repos
+│   └── configurerepos.sh (4)
+├── scripts
+│   └── startsimulator
+└── setupsimulator
+
+****************************************************************************************************************
+
+(1) - packages/checksum
+	a. Update the checksum file to reflect the changes/updates in the setupsimulator
+	of packages used:
+
+		md5sum ./*.deb ./*.rpm ./ debian-ppc64le-rootfs-v2.0.img.bz2 skiboot.lid vmlinux > checklist.md5
+		
+	b. Update the URL of the FTP server if needed.
+
+(2) - packages/rootfsfiles
+	a. Update the URL of the FTP server if needed.
+	b. Update the names of the packages if needed.
+
+(3) - packages/p8_simulator and /packages/p9_simulator
+	a. Update the URL of the FTP server if needed.
+	b. Update the names of the packages if needed.
+
+(4) - repos/configurerepos.sh
+	a. Verify the updates in the SDK's installation script (Paul's script) and 
+	update it accordingly.
+
+*****************************************************************************************************************
+
+FTP Serves:
+	a. Unicamp: ftp://ftp.unicamp.br/pub/linuxpatch/systemsim
+	Files:
+		debian-ppc64le-rootfs-v2.0.img.bz2
+		skiboot.lid
+		vmlinux
+	b. IBM FTP (Mambo Team): ftp://public.dhe.ibm.com/software/server/powerfuncsim/[p8 or p9]/<version>
+	Files:
+		systemsim-p8 .deb and .rpm files
+		systemsim-p9 .deb and .rpm files
+	c. IBM FTP (SDK): 
+	Files: ftp://public.dhe.ibm.com/software/server/iplsdk/common/systemsim
+		sdk-systemsim .zip installation file
+		checksum

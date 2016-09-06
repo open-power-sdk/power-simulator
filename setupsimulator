@@ -1,0 +1,421 @@
+#!/usr/bin/env python
+
+"""
+LICENSE INFORMATION
+
+The Programs listed below are licensed under the following terms and conditions
+in addition to those of the IBM International License Agreement for
+Non-Warranted Programs (IBM form number Z125-5589-05).
+Program Name: IBM POWER8 Functional Simulator version 1.0-2
+Program Number: tool
+
+Non-Production Limitation
+If the Program is designated as "Non-Production", the Program can only be
+deployed as part of the Licensee's internal development and test environment for
+internal non-production activities, including but not limited to testing,
+performance tuning,fault diagnosis, internal benchmarking, staging, quality
+assurance activity and/or developing internally used additions or extensions to
+the Program using published application programming interfaces. Licensee is not
+authorized to use any part of the Program for any other purposes without
+acquiring the appropriate production entitlements.
+
+Development Tool
+This Program is designed to aid in the development of software applications and
+systems. Licensee is solely responsible for the applications and systems that it
+develops by using this Program and assumes all risk and responsibility therefor.
+
+Source Components and Sample Materials
+The Program may include some components in source code form("Source Components")
+and other materials identified as Sample Materials. Licensee may copy and modify
+Source Components and Sample Materials for internal use only provided such use
+is within the limits of the license rights under this Agreement, provided
+however that Licensee may not alter or delete any copyright information or
+notices contained in the Source Components or Sample Materials. IBM provides the
+Source Components and Sample Materials without obligation of support and"AS IS",
+WITH NO WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING THE WARRANTY
+OF TITLE,NON-INFRINGEMENT OR NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND
+CONDITIONS OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+Third Party Data and Services
+The Program may contain links to or be used to access third party data services,
+databases, web services, software, or other third party content(all, "content").
+Access to this content is provided "AS-IS", WITH NO WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING THE WARRANTY OF TITLE, NON-INFRINGEMENT OR
+NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND CONDITIONS OF MERCHANTABILITY
+AND FITNESS FOR A PARTICULAR PURPOSE. Access can be terminated by the relevant
+third parties at their sole discretion at any time. Licensee may be required to
+enter into separate agreements with the third parties for the access to or use
+of such content. IBM is not a party to any such separate agreements and as an
+express condition of this license Licensee agrees to comply with the terms of
+such separate agreements.
+
+L/N: L-LJLT-9Q4D8R
+D/N: L-LJLT-9Q4D8R
+P/N: L-LJLT-9Q4D8R
+
+Contributors:
+    Rafael Peria de Sene <rpsene@br.ibm.com> - Initial Implementation
+"""
+
+from os.path import expanduser
+import subprocess
+import urllib2
+import os
+import sys
+import zipfile
+import pwd
+import socket
+import time
+
+FILES = ["./packages/p8_simulator", "./packages/p9_simulator",
+         "./packages/rootfsfiles", "./packages/checksum"]
+LICENSES = ["./packages/license"]
+VERSIONS = ["/opt/ibm/systemsim-p8", "/opt/ibm/systemsim-p9"]
+DEPENDENCIES = ["tunctl", "xterm", "bzip2"]
+DISK = "/debian-ppc64le-rootfs-v2.0.img"
+DISK_SYM_LINK = "/disk.img"
+HOME = expanduser("~")
+DOWNLOAD_DIR = HOME + "/systemsim_execution/"
+MOUNT_POINT = "/tmp/systemsimdiskimage"
+LICENSE_FILE_ZIP = DOWNLOAD_DIR + "/L-LJLT-9Q4D8R.zip"
+LICENSE = DOWNLOAD_DIR + "/L-LJLT-9Q4D8R/Softcopy/LA_en"
+LOCKFILE = DOWNLOAD_DIR + "/.sysmsimcustomlock"
+UBUNTU="Ubuntu"
+
+class setupsimulator():
+
+    """get distro name"""
+    def getDistro(self):
+        return self.executeCmd("cat", "/etc/issue").split(" ")[0]
+
+    """execute a cmd"""
+    def executeCmd(self, command, arguments):
+        cmd = [command, arguments]
+        subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        out, err = subp.communicate()
+        return out
+
+    """check if a command exists"""
+    def cmdExists(self, command):
+        subp = subprocess.call("type " + command, shell=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return (subp == 0);
+
+    """check the internet connectivity"""
+    def isConnectedInternet(self):
+        try:
+            socket.create_connection(("www.ibm.com", 80), 2)
+            return True
+        except IOError:
+            return False
+
+    """get username"""
+    def getUserName(self):
+        return pwd.getpwuid(os.getuid())[0]
+
+    """check if a directory exists"""
+    def directoryExists(self, location):
+        return os.path.exists(location)
+
+    """check if a file exists"""
+    def fileExists(self, location):
+        return os.path.isfile(location)
+
+    """create a directory"""
+    def createDirectory(self, location):
+        if not self.directoryExists(location):
+            if not os.path.exists(location):
+                os.makedirs(location)
+
+    """clean a directory"""
+    def removeDirectory(self, location):
+        self.printLine()
+        opt = raw_input(" * Would you like to clean " + location + "? [Y/N] ")
+        if "Y" in opt or "y" in opt:
+            if self.directoryExists(location):
+                os.system("rm -rf " + location + "/*")
+                self.printLine()
+        elif "N" in opt or "n" in opt:
+            pass
+        else:
+            print "    * Please, select one of the available options: Y or N"
+            sys.exit()
+
+    """install RPM file"""
+    def installRPM(self, package):
+        if self.cmdExists("dnf"):
+            os.system("sudo dnf install -y " + package)
+        else:
+            os.system("sudo yum install -y " + package)
+
+    """install DEB file"""
+    def installDEB(self, package):
+        os.system("sudo dpkg -i " + package)
+        os.system("sudo apt-get -fy install")
+
+    """install DEB file"""
+    def installDEBApt(self, package):
+        os.system("sudo apt-get -y install " + package)
+
+    """remove RPM file"""
+    def removeRPM(self, package):
+        os.system("sudo rpm -e " + package)
+
+    """remove DEB file"""
+    def removeDEB(self, package):
+        os.system("sudo apt-get purge -y " + package)
+
+    """configure the image, copying the configurerepos.sh into it."""
+    def configureImage(self, disk_img):
+        try:
+            # create mount point
+            os.system("sudo mkdir " + MOUNT_POINT)
+            # mount images
+            os.system("sudo mount -o loop " + disk_img + " " + MOUNT_POINT)
+            # copy file inside the images
+            os.system("sudo cp -rp ./repos/configurerepos.sh " + MOUNT_POINT + "/home")
+            # umount
+            os.system("sudo umount " + MOUNT_POINT)
+            # remove mount point
+            os.system("sudo rm -rf " + MOUNT_POINT)
+            # create lock file that block continuing customization
+            os.system("touch " + LOCKFILE)
+            print "done"
+        except RuntimeError:
+            sys.exit()
+
+    """install the required dependencies"""
+    def checkDependencies(self):
+        print " * Checking dependencies..."
+        try:
+            for dep in DEPENDENCIES:
+                if UBUNTU in setupsimulator().getDistro():
+                    if not self.cmdExists(dep):
+                        if dep == "tunctl":
+                            self.installDEBApt("uml-utilities")
+                        else:
+                            self.installDEBApt(dep)
+                else:
+                    if not self.cmdExists(dep):
+                        self.installRPM(dep)
+        except:
+            sys.exit()
+        self.printLine()
+
+    """return the size of file formated"""
+    def sizeOf(self, n):
+        for u in ['', 'Ki', 'Mi']:
+            if abs(n) < 1024.0:
+                return "%3.1f %s%s" % (n, u, 'B')
+            n = n / 1024.0
+        return "%.1f%s%s" % (n, 'Yi', 'B')
+
+    """download"""
+    def download(self, baseURL, fileName, location):
+        dBlockSize = 10240
+        dUrlInfo = urllib2.urlopen(baseURL + fileName)
+        dFile = open(location + "/" + fileName, 'wb')
+        dMeta = dUrlInfo.info()
+        print "   \\__(%s)" % (self.sizeOf(int(dMeta.getheaders("Content-Length")[0]))),
+        while True:
+            dBuffer = dUrlInfo.read(dBlockSize)
+            if not dBuffer:
+                break
+            dFile.write(dBuffer)
+        dFile.close()
+        print "done."
+
+    """verifies the packages integrity"""
+    def checkSum(self, location, checksumfile):
+        self.printLine()
+        print "Checking the files integrity..."
+        os.system("cd " + location + " && md5sum -c " + checksumfile)
+
+    """extract and convert the license from dos to unix"""
+    def configureLicense(self):
+        licensezip = zipfile.ZipFile(LICENSE_FILE_ZIP, 'r')
+        licensezip.extractall(DOWNLOAD_DIR)
+        licensezip.close()
+        licensetext = open(LICENSE, 'rb').read().replace('\r\n', '\n')
+        open(LICENSE, 'wb').write(licensetext)
+
+    """read license"""
+    def readLicense(self):
+        try:
+            # ask if the user wants to read the license
+            self.printLine()
+            opt = raw_input(" * Would you like to read the license? [Y/N] ")
+            if "Y" in opt or "y" in opt:
+                os.system("vi " + LICENSE)
+                print ""
+            elif "N" in opt or "n" in opt:
+                pass
+            else:
+                print "    * Please, select one of the available options: Y or N"
+                sys.exit()
+            # ask if the user agrees with the license
+            opt = raw_input(" * Do you agree with the license? [Y/N] ")
+            if "Y" in opt or "y" in opt:
+                return True
+            else:
+                self.printLine()
+                sys.exit()
+        except RuntimeError:
+            sys.exit()
+
+    """print the initial message"""
+    def prettyprint(self, action):
+        print "\n " + action + " the POWER Functional Simulator.\n"
+        print " WARNING: Ensure you are running this script as an user"
+        print "          with admin rights. You will be prompt to enter"
+        print "          your password during this process.\n"
+
+    """print a line"""
+    def printLine(self):
+        print "----------------------------------------------"
+
+"""  Here starts the main execution """
+
+try:
+    os.system("clear")
+    """
+    Timer to track the excution time
+    """
+    start_time = time.time()
+    """
+    Read the command line inputs which can be either -i for install
+    or -u for removal: setupsimulator -i or setupsimulator -u
+    """
+    if len(sys.argv) > 2 or len(sys.argv) < 2:
+        print "\n * Run this script using either of the options:"
+        print " * To install: setupsimulator -i"
+        print " * To uninstall: setupsimulator -u\n"
+        sys.exit()
+    else:
+        """
+        Check internet connection.
+        """
+        if  setupsimulator().isConnectedInternet() is False:
+            print "Looks like you do not have Internet access. Fix this issue and try again."
+            sys.exit()
+
+        """
+        Installation
+        """
+        if str(sys.argv[1]) == "-i":
+            setupsimulator().prettyprint("Installing")
+            """
+            Create a directory where all packages will be stored.
+            """
+            if setupsimulator().directoryExists(DOWNLOAD_DIR):
+                setupsimulator().removeDirectory(DOWNLOAD_DIR)
+            else:
+                setupsimulator().createDirectory(DOWNLOAD_DIR)
+            """
+            Configure the license.
+            """
+            for l in LICENSES:
+                with open(l) as f:
+                    FTPURL = f.readline().strip('\n')
+                    PACKAGES = f.readlines()
+                for r in range (len(PACKAGES)):
+                    if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + PACKAGES[r].strip('\n'))):
+                        print " * Downloading " + PACKAGES[r].strip('\n')
+                        setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
+            setupsimulator().configureLicense()
+            """
+            Start the installation process if the user agrees with the license.
+            """
+            if setupsimulator().readLicense():
+                setupsimulator().printLine()
+                """
+                Check and install missing dependencies.
+                """
+                setupsimulator().checkDependencies()
+                """
+                Download the necessary packages. They are stored into the files
+                license and simulator. The first line contains the base URI and the
+                rest of the file contains the packages.
+                """
+                for download in FILES:
+                    with open(download) as f:
+                        FTPURL = f.readline().strip('\n')
+                        PACKAGES = f.readlines()
+                    for r in range (len(PACKAGES)):
+                        if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + PACKAGES[r].strip('\n'))):
+                            if UBUNTU in setupsimulator().getDistro() and not PACKAGES[r].strip('\n').endswith(".rpm"):
+                                print " * Downloading " + PACKAGES[r].strip('\n')
+                                setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
+                            elif not UBUNTU in setupsimulator().getDistro() and not PACKAGES[r].strip('\n').endswith(".deb"):
+                                print " * Downloading " + PACKAGES[r].strip('\n')
+                                setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
+                setupsimulator().checkSum(DOWNLOAD_DIR, "checklist.md5")
+                """
+                Install the simulator packages for p8 and p9 according the host distro.
+                """
+                for v in VERSIONS:
+                    if not setupsimulator().directoryExists(v):
+                        setupsimulator().printLine()
+                        print "Installing the simulator packages..."
+                        if UBUNTU in setupsimulator().getDistro():
+                            for debPackage in os.listdir(DOWNLOAD_DIR):
+                                if debPackage.endswith(".deb"):
+                                    setupsimulator().installDEB(DOWNLOAD_DIR + "/" + debPackage)
+                        else:
+                            for rpmPackage in os.listdir(DOWNLOAD_DIR):
+                                if rpmPackage.endswith(".rpm"):
+                                    setupsimulator().installRPM(DOWNLOAD_DIR + "/" + rpmPackage)
+
+                """
+                Extract the bzip2 file which contains the Debian sysroot.
+                """
+                FULLPATH = DOWNLOAD_DIR + DISK
+                if not setupsimulator().fileExists(FULLPATH):
+                    if setupsimulator().fileExists(FULLPATH + ".bz2"):
+                        setupsimulator().printLine()
+                        print "Extracting the image (it will take a while)..."
+                        os.system("bzip2 -dkv " + FULLPATH + ".bz2")
+                    else:
+                        print "could not find" + FULLPATH + ".bz2."
+                        sys.exit()
+
+                if not setupsimulator().fileExists(LOCKFILE):
+                    setupsimulator().printLine()
+                    print "Customizing the image..."
+                    setupsimulator().configureImage(FULLPATH)
+
+                """
+                Configure a symlink to be used by the tcl script.
+                """
+                if not setupsimulator().fileExists(DOWNLOAD_DIR + DISK_SYM_LINK):
+                    os.system("ln -s " + DOWNLOAD_DIR + DISK + " " + DOWNLOAD_DIR + DISK_SYM_LINK)
+
+                """
+                Copy the startsimulator.py to the directory where all files where downloaded.
+                """
+                os.system("cp -rp ./scripts/startsimulator " + DOWNLOAD_DIR)
+                setupsimulator().printLine()
+                print("Execution time: %s seconds." % (time.time() - start_time))
+                print "Simulator files are located at " + DOWNLOAD_DIR
+                os.system("cd " + DOWNLOAD_DIR + " && ls")
+                print "\nRun startsimulator [-p8 or -p9] to start the simulator."
+        # remove
+        elif str(sys.argv[1]) == "-u":
+            os.system("clear")
+            setupsimulator().prettyprint("Removing")
+            if UBUNTU in setupsimulator().getDistro():
+                for p in VERSIONS:
+                    if setupsimulator().directoryExists(p):
+                        setupsimulator().removeDEB(p.split("/")[3])
+            else:
+                for p in VERSIONS:
+                    if setupsimulator().directoryExists(p):
+                        setupsimulator().removeRPM(p.split("/")[3])
+            setupsimulator().printLine()
+            print("Execution time: %s seconds." % (time.time() - start_time))
+        else:
+            print "Could not proceed with the script execution."
+            sys.exit()
+except RuntimeError:
+    print "Bye, exiting now."
+    sys.exit()
