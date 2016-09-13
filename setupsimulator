@@ -60,40 +60,49 @@ Contributors:
 from os.path import expanduser
 import subprocess
 import urllib2
+import zipfile
 import os
 import sys
-import zipfile
 import pwd
 import socket
 import time
 
 FILES = ["./packages/p8_simulator", "./packages/p9_simulator",
          "./packages/rootfsfiles", "./packages/checksum"]
+
 LICENSES = ["./packages/license"]
+
 VERSIONS = ["/opt/ibm/systemsim-p8", "/opt/ibm/systemsim-p9"]
+
 DEPENDENCIES = ["tunctl", "xterm", "bzip2"]
+
 DISK = "/debian-ppc64le-rootfs-v2.0.img"
+
 DISK_SYM_LINK = "/disk.img"
+
 HOME = expanduser("~")
+
 DOWNLOAD_DIR = HOME + "/systemsim_execution/"
+
 MOUNT_POINT = "/tmp/systemsimdiskimage"
+
 LICENSE_FILE_ZIP = DOWNLOAD_DIR + "/L-LJLT-9Q4D8R.zip"
+
 LICENSE = DOWNLOAD_DIR + "/L-LJLT-9Q4D8R/Softcopy/LA_en"
+
 LOCKFILE = DOWNLOAD_DIR + "/.sysmsimcustomlock"
+
 UBUNTU="Ubuntu"
+
+SUSE="SUSE"
+
+SUSEREPO = "http://download.opensuse.org/repositories/network:utilities/SLE_12_SP1/network:utilities.repo"
 
 class setupsimulator():
 
     """get distro name"""
     def getDistro(self):
-        return self.executeCmd("cat", "/etc/issue").split(" ")[0]
-
-    """execute a cmd"""
-    def executeCmd(self, command, arguments):
-        cmd = [command, arguments]
-        subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        out, err = subp.communicate()
-        return out
+        return self.executeCmd("cat", "/etc/issue")
 
     """check if a command exists"""
     def cmdExists(self, command):
@@ -143,27 +152,49 @@ class setupsimulator():
 
     """install RPM file"""
     def installRPM(self, package):
-        if self.cmdExists("dnf"):
-            os.system("sudo dnf install -y " + package)
-        else:
-            os.system("sudo yum install -y " + package)
+        try:
+            if self.cmdExists("dnf"):
+                os.system("sudo dnf install -y " + package)
+            elif self.cmdExists("zypper"):
+                os.system("sudo zypper --non-interactive install " + package)
+            else:
+                os.system("sudo yum install -y " + package)
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
+            raise
+            sys.exit()
 
     """install DEB file"""
     def installDEB(self, package):
-        os.system("sudo dpkg -i " + package)
-        os.system("sudo apt-get -fy install")
+        try:
+            os.system("sudo dpkg -i " + package)
+            os.system("sudo apt-get -fy install")
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
+            raise
+            sys.exit()
 
     """install DEB file"""
     def installDEBApt(self, package):
-        os.system("sudo apt-get -y install " + package)
+        try:
+            os.system("sudo apt-get -y install " + package)
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
+            raise
+            sys.exit()
 
     """remove RPM file"""
     def removeRPM(self, package):
-        os.system("sudo rpm -e " + package)
+        try:
+            os.system("sudo rpm -e " + package)
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
+            raise
+            sys.exit()
 
     """remove DEB file"""
     def removeDEB(self, package):
-        os.system("sudo apt-get purge -y " + package)
+        try:
+            os.system("sudo apt-get purge -y " + package)
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
+            raise
+            sys.exit()
 
     """configure the image, copying the configurerepos.sh into it."""
     def configureImage(self, disk_img):
@@ -181,26 +212,37 @@ class setupsimulator():
             # create lock file that block continuing customization
             os.system("touch " + LOCKFILE)
             print "done"
-        except RuntimeError:
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
             sys.exit()
 
-    """install the required dependencies"""
-    def checkDependencies(self):
+    """verify if the required dependencies are installed"""
+    def verifyDependencies(self):
+        self.printLine()
         print " * Checking dependencies..."
         try:
             for dep in DEPENDENCIES:
-                if UBUNTU in setupsimulator().getDistro():
-                    if not self.cmdExists(dep):
-                        if dep == "tunctl":
-                            self.installDEBApt("uml-utilities")
-                        else:
-                            self.installDEBApt(dep)
-                else:
-                    if not self.cmdExists(dep):
-                        self.installRPM(dep)
-        except:
+                if not self.cmdExists(dep):
+                    self.installDependencies(dep)
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
             sys.exit()
-        self.printLine()
+
+    """install the required dependencies"""
+    def installDependencies(self, dep):
+        try:
+            if UBUNTU in setupsimulator().getDistro():
+                if dep == "tunctl":
+                    self.installDEBApt("uml-utilities")
+                else:
+                    self.installDEBApt(dep)
+            elif SUSE in setupsimulator().getDistro():
+                if dep == "tunctl":
+                    os.system("sudo zypper addrepo " + SUSEREPO)
+                    os.system("sudo zypper refresh")
+                    self.installRPM(dep)
+            else:
+                self.installRPM(dep)
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
+            sys.exit()
 
     """return the size of file formated"""
     def sizeOf(self, n):
@@ -260,7 +302,7 @@ class setupsimulator():
             else:
                 self.printLine()
                 sys.exit()
-        except RuntimeError:
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
             sys.exit()
 
     """print the initial message"""
@@ -275,7 +317,6 @@ class setupsimulator():
         print "----------------------------------------------"
 
 """  Here starts the main execution """
-
 try:
     os.system("clear")
     """
@@ -293,7 +334,7 @@ try:
         sys.exit()
     else:
         """
-        Check internet connection.
+        Check Internet connection.
         """
         if  setupsimulator().isConnectedInternet() is False:
             print "Looks like you do not have Internet access. Fix this issue and try again."
@@ -304,6 +345,12 @@ try:
         """
         if str(sys.argv[1]) == "-i":
             setupsimulator().prettyprint("Installing")
+
+            """
+            Check and install missing dependencies.
+            """
+            setupsimulator().verifyDependencies()
+
             """
             Create a directory where all packages will be stored.
             """
@@ -328,10 +375,6 @@ try:
             """
             if setupsimulator().readLicense():
                 setupsimulator().printLine()
-                """
-                Check and install missing dependencies.
-                """
-                setupsimulator().checkDependencies()
                 """
                 Download the necessary packages. They are stored into the files
                 license and simulator. The first line contains the base URI and the
@@ -416,6 +459,5 @@ try:
         else:
             print "Could not proceed with the script execution."
             sys.exit()
-except RuntimeError:
-    print "Bye, exiting now."
+except (KeyboardInterrupt, SystemExit, RuntimeError):
     sys.exit()
