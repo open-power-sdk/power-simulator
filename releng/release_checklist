@@ -3,26 +3,27 @@ sdk-systemsim release checklist
 Every public release of this software requires attention to a set of paths which
 must be verified in order to ensure the correct execution.
 .
-├── LICENSE
 ├── packages
-│   ├── checksum (1)
+│   ├── distros
+│   │   ├── fedora
+│   │   ├── suserhelcentos
+│   │   ├── ubuntu
 │   ├── license
-│   ├── rootfsfiles (2)
-│   └── p8_simulator (3)
-│   └── p9_simulator (3)
+│   ├── rootfsfiles
 ├── README.md
 ├── releng
 │   ├── build.sh
-│   ├── release_checklist
+│   └── release_checklist
 ├── repos
-│   └── configurerepos.sh (4)
+│   └── configurerepos.sh
 ├── scripts
 │   └── startsimulator
-└── setupsimulator
+├── setupsimulator
+
 
 ****************************************************************************************************************
 
-(1) - packages/checksum
+(1) - packages/distros/checklist.md5
 	a. Update the checksum file to reflect the changes/updates in the setupsimulator
 	of packages used:
 
