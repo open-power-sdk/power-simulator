@@ -1,4 +1,4 @@
-ftp://churrasco.ltc.br.ibm.com/systemsim/
+ftp://ftp.unicamp.br/pub/linuxpatch/systemsim/
 skiboot.lid
 vmlinux
-debian-ppc64le-rootfs-v2.0.img.bz2
+debian-ppc64le.img.bz2

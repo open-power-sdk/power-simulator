@@ -3,55 +3,34 @@
 """
 LICENSE INFORMATION
 
-The Programs listed below are licensed under the following terms and conditions
-in addition to those of the IBM International License Agreement for
-Non-Warranted Programs (IBM form number Z125-5589-05).
-Program Name: IBM POWER8 Functional Simulator version 1.0-2
-Program Number: tool
+Copyright (c) 2016 IBM Corporation.
+All rights reserved.
 
-Non-Production Limitation
-If the Program is designated as "Non-Production", the Program can only be
-deployed as part of the Licensee's internal development and test environment for
-internal non-production activities, including but not limited to testing,
-performance tuning,fault diagnosis, internal benchmarking, staging, quality
-assurance activity and/or developing internally used additions or extensions to
-the Program using published application programming interfaces. Licensee is not
-authorized to use any part of the Program for any other purposes without
-acquiring the appropriate production entitlements.
+The Programs listed below are licensed under the following terms and
+conditions in addition to those of the IBM International License
+Agreement for Non-Warranted Programs (IBM form number Z125-5589-05).
 
-Development Tool
-This Program is designed to aid in the development of software applications and
-systems. Licensee is solely responsible for the applications and systems that it
-develops by using this Program and assumes all risk and responsibility therefor.
+Program Name: IBM Software Development Kit for Linux on Power v1
+Program Number: SDK
 
 Source Components and Sample Materials
-The Program may include some components in source code form("Source Components")
-and other materials identified as Sample Materials. Licensee may copy and modify
-Source Components and Sample Materials for internal use only provided such use
-is within the limits of the license rights under this Agreement, provided
-however that Licensee may not alter or delete any copyright information or
-notices contained in the Source Components or Sample Materials. IBM provides the
-Source Components and Sample Materials without obligation of support and"AS IS",
-WITH NO WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING THE WARRANTY
-OF TITLE,NON-INFRINGEMENT OR NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND
-CONDITIONS OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-Third Party Data and Services
-The Program may contain links to or be used to access third party data services,
-databases, web services, software, or other third party content(all, "content").
-Access to this content is provided "AS-IS", WITH NO WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING THE WARRANTY OF TITLE, NON-INFRINGEMENT OR
-NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND CONDITIONS OF MERCHANTABILITY
-AND FITNESS FOR A PARTICULAR PURPOSE. Access can be terminated by the relevant
-third parties at their sole discretion at any time. Licensee may be required to
-enter into separate agreements with the third parties for the access to or use
-of such content. IBM is not a party to any such separate agreements and as an
-express condition of this license Licensee agrees to comply with the terms of
-such separate agreements.
+The Program may include some components in source code form ("Source
+Components") and other materials identified as Sample Materials.
+Licensee may copy and modify Source Components and Sample Materials
+for internal use only provided such use is within the limits of the
+license rights under this Agreement, provided however that Licensee
+may not alter or delete any copyright information or notices
+contained in the Source Components or Sample Materials. IBM provides
+the Source Components and Sample Materials without obligation of
+support and "AS IS", WITH NO WARRANTY OF ANY KIND, EITHER EXPRESS OR
+IMPLIED, INCLUDING THE WARRANTY OF TITLE, NON-INFRINGEMENT OR
+NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND CONDITIONS OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-L/N: L-LJLT-9Q4D8R
-D/N: L-LJLT-9Q4D8R
-P/N: L-LJLT-9Q4D8R
+L/N:  L-WSMA-9PYJJ6
+D/N:  L-WSMA-9PYJJ6
+P/N:  L-WSMA-9PYJJ6
 
 Contributors:
     Rafael Peria de Sene <rpsene@br.ibm.com> - Initial Implementation
@@ -67,8 +46,7 @@ import pwd
 import socket
 import time
 
-FILES = ["./packages/p8_simulator", "./packages/p9_simulator",
-         "./packages/rootfsfiles", "./packages/checksum"]
+COMMON_FILES = ["./packages/rootfsfiles", "./packages/checksum"]
 
 LICENSES = ["./packages/license"]
 
@@ -76,7 +54,7 @@ VERSIONS = ["/opt/ibm/systemsim-p8", "/opt/ibm/systemsim-p9"]
 
 DEPENDENCIES = ["tunctl", "xterm", "bzip2"]
 
-DISK = "/debian-ppc64le-rootfs-v2.0.img"
+DISK = "/debian-ppc64le.img"
 
 DISK_SYM_LINK = "/disk.img"
 
@@ -94,6 +72,8 @@ LOCKFILE = DOWNLOAD_DIR + "/.sysmsimcustomlock"
 
 UBUNTU="Ubuntu"
 
+FEDORA="Fedora"
+
 SUSE="SUSE"
 
 SUSEREPO = "http://download.opensuse.org/repositories/network:utilities/SLE_12_SP1/network:utilities.repo"
@@ -102,7 +82,9 @@ class setupsimulator():
 
     """get distro name"""
     def getDistro(self):
-        return self.executeCmd("cat", "/etc/issue")
+        with open("/etc/os-release") as f:
+            lines = f.readlines()
+            return lines[0].split("=", 1)[1].replace("\"", "")
 
     """execute a cmd"""
     def executeCmd(self, command, arguments):
@@ -387,18 +369,36 @@ try:
                 license and simulator. The first line contains the base URI and the
                 rest of the file contains the packages.
                 """
-                for download in FILES:
+                for download in COMMON_FILES:
                     with open(download) as f:
                         FTPURL = f.readline().strip('\n')
                         PACKAGES = f.readlines()
                     for r in range (len(PACKAGES)):
                         if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + PACKAGES[r].strip('\n'))):
-                            if UBUNTU in setupsimulator().getDistro() and not PACKAGES[r].strip('\n').endswith(".rpm"):
-                                print " * Downloading " + PACKAGES[r].strip('\n')
-                                setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
-                            elif not UBUNTU in setupsimulator().getDistro() and not PACKAGES[r].strip('\n').endswith(".deb"):
-                                print " * Downloading " + PACKAGES[r].strip('\n')
-                                setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
+                            print " * Downloading " + PACKAGES[r].strip('\n')
+                            setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
+
+                if UBUNTU in setupsimulator().getDistro():
+                    downloadFile = "distros/packages/ubuntu"
+                elif FEDORA in setupsimulator().getDistro():
+                    downloadFile = "distros/packages/fedora"
+                else:
+                    downloadFile = "distros/packages/suserhelcentos"
+                with open(downloadFile) as f:
+                    PACKAGES = f.readlines()
+                    for r in range (len(PACKAGES)):
+                        # brake the file remote location
+                        aux = r.split("/")
+                        # gets the last index with contains the package name
+                        symPackage = aux[len(aux) - 1]
+                        # remove the last item
+                        aux.pop()
+                        # concatenates creating the URL
+                        FTPURL = '/'.join(aux)
+                        if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + symPackage.strip('\n'))):
+                            print " * Downloading " + symPackage.strip('\n')
+                            setupsimulator().download(FTPURL, symPackage.strip('\n'), DOWNLOAD_DIR)
+
                 setupsimulator().checkSum(DOWNLOAD_DIR, "checklist.md5")
                 """
                 Install the simulator packages for p8 and p9 according the host distro.
