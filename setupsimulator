@@ -46,7 +46,7 @@ import pwd
 import socket
 import time
 
-COMMON_FILES = ["./packages/rootfsfiles", "./packages/checksum"]
+COMMON_FILES = ["./packages/rootfsfiles"]
 
 LICENSES = ["./packages/license"]
 
@@ -70,11 +70,11 @@ LICENSE = DOWNLOAD_DIR + "/L-LJLT-9Q4D8R/Softcopy/LA_en"
 
 LOCKFILE = DOWNLOAD_DIR + "/.sysmsimcustomlock"
 
-UBUNTU="Ubuntu"
+UBUNTU = "Ubuntu"
 
-FEDORA="Fedora"
+FEDORA = "Fedora"
 
-SUSE="SUSE"
+SUSE = "SUSE"
 
 SUSEREPO = "http://download.opensuse.org/repositories/network:utilities/SLE_12_SP1/network:utilities.repo"
 
@@ -201,7 +201,9 @@ class setupsimulator():
             # create lock file that block continuing customization
             os.system("touch " + LOCKFILE)
             print "done"
-        except (KeyboardInterrupt, SystemExit, RuntimeError):
+        except (KeyboardInterrupt, SystemExit, RuntimeError, OSError, IOError):
+            print "\n   ERROR: could not configure the " + disk_img
+            print "   exiting now!"
             sys.exit()
 
     """verify if the required dependencies are installed"""
@@ -243,32 +245,43 @@ class setupsimulator():
 
     """download"""
     def download(self, baseURL, fileName, location):
-        dBlockSize = 10240
-        dUrlInfo = urllib2.urlopen(baseURL + fileName)
-        dFile = open(location + "/" + fileName, 'wb')
-        dMeta = dUrlInfo.info()
-        print "   \\__(%s)" % (self.sizeOf(int(dMeta.getheaders("Content-Length")[0]))),
-        while True:
-            dBuffer = dUrlInfo.read(dBlockSize)
-            if not dBuffer:
-                break
-            dFile.write(dBuffer)
-        dFile.close()
-        print "done."
+        try:
+            dBlockSize = 10240
+            dUrlInfo = urllib2.urlopen(baseURL + fileName)
+            dFile = open(location + "/" + fileName, 'wb')
+            dMeta = dUrlInfo.info()
+            print "   \\__(%s)" % (self.sizeOf(int(dMeta.getheaders("Content-Length")[0]))),
+            while True:
+                dBuffer = dUrlInfo.read(dBlockSize)
+                if not dBuffer:
+                    break
+                dFile.write(dBuffer)
+            dFile.close()
+            print "done."
+        except (OSError, IOError):
+            print "\n   ERROR: could not download " + fileName + ". Check if the location"
+            print "   " + baseURL + " is available."
 
     """verifies the packages integrity"""
     def checkSum(self, location, checksumfile):
         self.printLine()
-        print "Checking the files integrity..."
-        os.system("cd " + location + " && md5sum -c " + checksumfile)
+        if self.fileExists(location + checksumfile):
+            print "Checking the files integrity..."
+            os.system("cd " + location + " && md5sum -c " + checksumfile)
+        else:
+            print "\n   ERROR: could not verify the files integrity. The file " + checksumfile
+            print "   " + "is not available."
 
     """extract and convert the license from dos to unix"""
     def configureLicense(self):
-        licensezip = zipfile.ZipFile(LICENSE_FILE_ZIP, 'r')
-        licensezip.extractall(DOWNLOAD_DIR)
-        licensezip.close()
-        licensetext = open(LICENSE, 'rb').read().replace('\r\n', '\n')
-        open(LICENSE, 'wb').write(licensetext)
+        try:
+            licensezip = zipfile.ZipFile(LICENSE_FILE_ZIP, 'r')
+            licensezip.extractall(DOWNLOAD_DIR)
+            licensezip.close()
+            licensetext = open(LICENSE, 'rb').read().replace('\r\n', '\n')
+            open(LICENSE, 'wb').write(licensetext)
+        except (OSError, IOError):
+            print "\n   ERROR: could not configure the license."
 
     """read license"""
     def readLicense(self):
@@ -379,16 +392,16 @@ try:
                             setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
 
                 if UBUNTU in setupsimulator().getDistro():
-                    downloadFile = "distros/packages/ubuntu"
+                    downloadFile = "./packages/distros/ubuntu"
                 elif FEDORA in setupsimulator().getDistro():
-                    downloadFile = "distros/packages/fedora"
+                    downloadFile = "./packages/distros/fedora"
                 else:
-                    downloadFile = "distros/packages/suserhelcentos"
+                    downloadFile = "./packages/distros/suserhelcentos"
                 with open(downloadFile) as f:
                     PACKAGES = f.readlines()
                     for r in range (len(PACKAGES)):
                         # brake the file remote location
-                        aux = r.split("/")
+                        aux = PACKAGES[r].split("/")
                         # gets the last index with contains the package name
                         symPackage = aux[len(aux) - 1]
                         # remove the last item
@@ -397,7 +410,7 @@ try:
                         FTPURL = '/'.join(aux)
                         if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + symPackage.strip('\n'))):
                             print " * Downloading " + symPackage.strip('\n')
-                            setupsimulator().download(FTPURL, symPackage.strip('\n'), DOWNLOAD_DIR)
+                            setupsimulator().download(FTPURL + "/", symPackage.strip('\n'), DOWNLOAD_DIR)
 
                 setupsimulator().checkSum(DOWNLOAD_DIR, "checklist.md5")
                 """
@@ -424,9 +437,14 @@ try:
                     if setupsimulator().fileExists(FULLPATH + ".bz2"):
                         setupsimulator().printLine()
                         print "Extracting the image (it will take a while)..."
-                        os.system("bzip2 -dkv " + FULLPATH + ".bz2")
+                        try:
+                            os.system("bzip2 -dkv " + FULLPATH + ".bz2")
+                        except (OSError, IOError):
+                            print "\n   ERROR: could not extract " + FULLPATH + ". Aborting."
+                            sys.exit()
                     else:
-                        print "could not find" + FULLPATH + ".bz2."
+                        print "\n   ERROR: could not find" + FULLPATH + ".bz2."
+                        print "   exiting now!"
                         sys.exit()
 
                 if not setupsimulator().fileExists(LOCKFILE):
@@ -446,7 +464,7 @@ try:
                 os.system("cp -rp ./scripts/startsimulator " + DOWNLOAD_DIR)
                 setupsimulator().printLine()
                 print("Execution time: %s seconds." % (time.time() - start_time))
-                print "Simulator files are located at " + DOWNLOAD_DIR
+                print "\nSimulator files are located at " + DOWNLOAD_DIR
                 os.system("cd " + DOWNLOAD_DIR + " && ls")
                 print "\nRun startsimulator [-p8 or -p9] to start the simulator."
         # remove
