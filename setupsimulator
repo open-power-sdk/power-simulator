@@ -102,7 +102,7 @@ class setupsimulator():
     """check the internet connectivity"""
     def isConnectedInternet(self):
         try:
-            socket.create_connection(("www.ibm.com", 80), 2)
+            socket.create_connection(("23.202.38.212", 80), 2)
             return True
         except IOError:
             return False

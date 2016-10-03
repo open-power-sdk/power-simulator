@@ -32,75 +32,70 @@ L/N:  L-WSMA-9PYJJ6
 D/N:  L-WSMA-9PYJJ6
 P/N:  L-WSMA-9PYJJ6
 
-Contributors: 
-	Rafael Peria de Sene <rpsene@br.ibm.com> - Initial Implementation
+Contributors:
+    Rafael Peria de Sene <rpsene@br.ibm.com> - Initial Implementation
 '''
 
 import sys
 import os
 import pwd
 
-
 class startsimulator():
 
-	#get username
-	def getUserName(self):
-	        return pwd.getpwuid(os.getuid())[0]
+    #get username
+    def getUserName(self):
+            return pwd.getpwuid(os.getuid())[0]
 
-	#set the tap0 network interface
-	def setNetwork(self):
-		os.system ("clear")
-    	print "\nConfiguring network...\n"
-    	os.system ("sudo tunctl -u " + self.getUserName() + " -t tap0")
-		os.system ("sudo ifconfig tap0 172.19.98.108 netmask 255.255.255.254")
-		os.system ("sudo iptables -t nat -A POSTROUTING -j MASQUERADE")
-		os.system ("sudo iptables -I FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
-		os.system ("sudo iptables -I FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT")
-		os.system ("sudo sysctl -w net.ipv4.ip_forward=1 $2>&1")
-		os.system ("sudo -k")
+    #set the tap0 network interface
+    def setNetwork(self):
+        os.system ("clear")
+        print "\n\nConfiguring network...\n"
+        os.system ("sudo tunctl -u " + self.getUserName() + " -t tap0")
+        os.system ("sudo ifconfig tap0 172.19.98.108 netmask 255.255.255.254")
+        os.system ("sudo iptables -t nat -A POSTROUTING -j MASQUERADE")
+        os.system ("sudo iptables -I FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
+        os.system ("sudo iptables -I FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT")
+        os.system ("sudo sysctl -w net.ipv4.ip_forward=1 $2>&1")
+        os.system ("sudo -k")
 
-	#unset the tap0 network interface
-	def unsetNetwork(self):
-		os.system ("clear")
-		print "\nRemoving network configuration...\n"
-		os.system("sudo tunctl -d tap0")
-		os.system("sudo iptables -D FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
-		os.system("sudo iptables -D FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT")
-		os.system("sudo iptables -t nat -D POSTROUTING -j MASQUERADE")
-		os.system("sudo -k")
+    #unset the tap0 network interface
+    def unsetNetwork(self):
+        os.system ("clear")
+        print "\n\nRemoving network configuration...\n"
+        os.system("sudo tunctl -d tap0")
+        os.system("sudo iptables -D FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
+        os.system("sudo iptables -D FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT")
+        os.system("sudo iptables -t nat -D POSTROUTING -j MASQUERADE")
+        os.system("sudo -k")
 
-	#start the simulator
-	def startSimulator(self):
-		os.system("clear")
-		if len(sys.argv) > 2 or len(sys.argv) < 2:
-        		print "\n Run this script using either of the options:"
-        		print " * startsimulator [-p8 or -p9]"
-        		sys.exit()
-    		else:
+    #start the simulator
+    def startSimulator(self):
+        os.system("clear")
+        if len(sys.argv) > 2 or len(sys.argv) < 2:
+                print "\n Run this script using either of the options:"
+                print " * startsimulator [-p8 or -p9]"
+                sys.exit()
+        else:
+            print " \nThis script starts the Power Functional Simulator and sets "
+            print " a tap0 interface and all required iptables rules.\n"
+            print " NOTE: when the boot is complete access the simulator via ssh: "
+            print "     ssh root@172.19.98.109 / pass: mambo\n"
 
-			print " \nThis script starts the Power Functional Simulator and sets "
-			print " a tap0 interface and all required iptables rules.\n"
-			print " NOTE: when the boot is complete access the simulator via ssh: "
-			print " 	ssh root@172.19.98.109 / pass: mambo\n"
-
-			if str(sys.argv[1]) == "-p8":
-				self.setNetwork()
-				os.system("/opt/ibm/systemsim-p8/run/pegasus/power8 -W -f /opt/ibm/systemsim-p8/run/pegasus/linux/boot-linux-le.tcl")
-				self.unsetNetwork()
-			elif str(sys.argv[1]) == "-p9":
-				self.setNetwork()
-				os.system("/opt/ibm/systemsim-p9/run/p9/power9 -W -f /opt/ibm/systemsim-p9/run/p9/linux/boot-linux-le-skiboot.tcl")
-				self.unsetNetwork()
-			else:
-				print "Could not execute this script."
-				sys.exit()
-
-
+            if str(sys.argv[1]) == "-p8":
+                self.setNetwork()
+                os.system("/opt/ibm/systemsim-p8/run/pegasus/power8 -W -f /opt/ibm/systemsim-p8/run/pegasus/linux/boot-linux-le.tcl")
+                self.unsetNetwork()
+            elif str(sys.argv[1]) == "-p9":
+                self.setNetwork()
+                os.system("/opt/ibm/systemsim-p9/run/p9/power9 -W -f /opt/ibm/systemsim-p9/run/p9/linux/boot-linux-le-skiboot.tcl")
+                self.unsetNetwork()
+            else:
+                print "Could not execute this script."
+                sys.exit()
 '''
 #############  Here starts the main execution #############
 '''
-
 try:
-	startsimulator().startSimulator()
+    startsimulator().startSimulator()
 except:
-	sys.exit()
+    sys.exit()
