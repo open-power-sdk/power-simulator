@@ -1,40 +1,33 @@
 #!/usr/bin/env python
 
-'''
-LICENSE INFORMATION
+"""
+Author(s):  Rafael Sene  <rpsene@br.ibm.com>
 
-Copyright (c) 2016 IBM Corporation.
-All rights reserved.
+Copyright (c) 2016 IBM Corporation
 
-The Programs listed below are licensed under the following terms and
-conditions in addition to those of the IBM International License
-Agreement for Non-Warranted Programs (IBM form number Z125-5589-05).
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+Neither the name of the IBM Corporation nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
 
-Program Name: IBM Software Development Kit for Linux on Power v1
-Program Number: SDK
-
-Source Components and Sample Materials
-
-The Program may include some components in source code form ("Source
-Components") and other materials identified as Sample Materials.
-Licensee may copy and modify Source Components and Sample Materials
-for internal use only provided such use is within the limits of the
-license rights under this Agreement, provided however that Licensee
-may not alter or delete any copyright information or notices
-contained in the Source Components or Sample Materials. IBM provides
-the Source Components and Sample Materials without obligation of
-support and "AS IS", WITH NO WARRANTY OF ANY KIND, EITHER EXPRESS OR
-IMPLIED, INCLUDING THE WARRANTY OF TITLE, NON-INFRINGEMENT OR
-NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND CONDITIONS OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-
-L/N:  L-WSMA-9PYJJ6
-D/N:  L-WSMA-9PYJJ6
-P/N:  L-WSMA-9PYJJ6
-
-Contributors:
-    Rafael Peria de Sene <rpsene@br.ibm.com> - Initial Implementation
-'''
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL IBM CORPORATION BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+"""
 
 import sys
 import os
