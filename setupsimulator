@@ -57,9 +57,9 @@ DOWNLOAD_DIR = HOME + "/systemsim_execution/"
 
 MOUNT_POINT = "/tmp/systemsimdiskimage"
 
-LICENSE_FILE_ZIP = DOWNLOAD_DIR + "/L-LJLT-9Q4D8R.zip"
+LICENSE_FILE_ZIP = DOWNLOAD_DIR + "/L-RRKI-ACHTLB.zip"
 
-LICENSE = DOWNLOAD_DIR + "/L-LJLT-9Q4D8R/Softcopy/LA_en"
+LICENSE = DOWNLOAD_DIR + "/L-RRKI-ACHTLB/Softcopy/LA_en"
 
 LOCKFILE = DOWNLOAD_DIR + "/.sysmsimcustomlock"
 
