@@ -459,7 +459,9 @@ try:
                 print("Execution time: %s seconds." % (time.time() - start_time))
                 print "\nSimulator files are located at " + DOWNLOAD_DIR
                 os.system("cd " + DOWNLOAD_DIR + " && ls")
-                print "\nRun startsimulator [-p8 or -p9] to start the simulator."
+                print "\nRun startsimulator [-p8 or -p9] to start the simulator from the command line or"
+		print "select POWER Simulator > Start from the whithin the SDK."
+		print "\nThe default credentials to access the simulator are: user=root/pwd=mambo"
         # remove
         elif str(sys.argv[1]) == "-u":
             os.system("clear")
