@@ -69,6 +69,8 @@ FEDORA = "Fedora"
 
 SUSE = "SUSE"
 
+RHEL = "Red Hat"
+
 SUSEREPO = "http://download.opensuse.org/repositories/network:utilities/SLE_12_SP1/network:utilities.repo"
 
 class setupsimulator():
@@ -334,6 +336,13 @@ try:
         if  setupsimulator().isConnectedInternet() is False:
             print "Looks like you do not have Internet access. Fix this issue and try again."
             sys.exit()
+
+	"""
+	Check if the target is RHEL and ask for tunctl
+	"""
+	if RHEL in setupsimulator().getDistro() and if not self.cmdExists("tunctl"): :
+	   print "\n\nPlease, install tunctl and run setupsimulator -i again.\n\n"
+	   sys.exit()
 
         """
         Installation
