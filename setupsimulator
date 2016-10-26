@@ -340,7 +340,7 @@ try:
 	"""
 	Check if the target is RHEL and ask for tunctl
 	"""
-	if RHEL in setupsimulator().getDistro() and if not self.cmdExists("tunctl"): :
+	if RHEL in setupsimulator().getDistro() and not self.cmdExists("tunctl"): :
 	   print "\n\nPlease, install tunctl and run setupsimulator -i again.\n\n"
 	   sys.exit()
 
