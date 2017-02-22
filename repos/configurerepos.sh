@@ -1,38 +1,22 @@
 #!/bin/bash
 #
-# LICENSE INFORMATION
-# 
-# Copyright (c) 2016 IBM Corporation.
-# All rights reserved.
+# Copyright (C) 2017 IBM Corporation
 #
-# The Programs listed below are licensed under the following terms and
-# conditions in addition to those of the IBM International License
-# Agreement for Non-Warranted Programs (IBM form number Z125-5589-05).
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Program Name: IBM Software Development Kit for Linux on Power v1
-# Program Number: SDK
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-# Source Components and Sample Materials
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
-# The Program may include some components in source code form ("Source
-# Components") and other materials identified as Sample Materials.
-# Licensee may copy and modify Source Components and Sample Materials
-# for internal use only provided such use is within the limits of the
-# license rights under this Agreement, provided however that Licensee
-# may not alter or delete any copyright information or notices
-# contained in the Source Components or Sample Materials. IBM provides
-# the Source Components and Sample Materials without obligation of
-# support and "AS IS", WITH NO WARRANTY OF ANY KIND, EITHER EXPRESS OR
-# IMPLIED, INCLUDING THE WARRANTY OF TITLE, NON-INFRINGEMENT OR
-# NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND CONDITIONS OF
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-#
-# L/N:  L-WSMA-9PYJJ6
-# D/N:  L-WSMA-9PYJJ6
-# P/N:  L-WSMA-9PYJJ6
-#
-#   IBM Corporation, Paul Clarke- initial implementation and documentation.
-#		     Rafael Sene - customizations for POWER Functional Simulator
+#    Contributors:
+#        * Paul Clarke <pacman@us.ibm.com>
+#        * Rafael Sene <rpsene@br.ibm.com>
 
 [[ "$(id -u)" != 0 ]] && echo "This script must be run with root priviledges." && exit 1
 
