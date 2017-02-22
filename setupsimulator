@@ -73,6 +73,7 @@ RHEL = "Red Hat"
 
 SUSEREPO = "http://download.opensuse.org/repositories/network:utilities/SLE_12_SP1/network:utilities.repo"
 
+
 class setupsimulator():
 
     """get distro name"""
@@ -90,9 +91,8 @@ class setupsimulator():
 
     """check if a command exists"""
     def cmdExists(self, command):
-        subp = subprocess.call("type " + command, shell=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return (subp == 0);
+        subp = subprocess.call("type " + command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return (subp == 0)
 
     """check the internet connectivity"""
     def isConnectedInternet(self):
@@ -313,6 +313,7 @@ class setupsimulator():
     def printLine(self):
         print "----------------------------------------------"
 
+
 """  Here starts the main execution """
 try:
     os.system("clear")
@@ -333,160 +334,159 @@ try:
         """
         Check Internet connection.
         """
-        if  setupsimulator().isConnectedInternet() is False:
+        if setupsimulator().isConnectedInternet() is False:
             print "Looks like you do not have Internet access. Fix this issue and try again."
             sys.exit()
 
 	"""
-	Check if the target is RHEL and ask for tunctl
-	"""
-	if RHEL in setupsimulator().getDistro() and not self.cmdExists("tunctl"):
-	   print "\n\nPlease, install tunctl and run setupsimulator -i again.\n\n"
-	   sys.exit()
+    Check if the target is RHEL and ask for tunctl
+    """
+    if RHEL in setupsimulator().getDistro() and not setupsimulator().cmdExists("tunctl"):
+        print "\n\nPlease, install tunctl and run setupsimulator -i again.\n\n"
+        sys.exit()
+
+    """
+    Installation
+    """
+    if str(sys.argv[1]) == "-i":
+        setupsimulator().prettyprint("Installing")
+        """
+        Check and install missing dependencies.
+        """
+        setupsimulator().verifyDependencies()
 
         """
-        Installation
+        Create a directory where all packages will be stored.
         """
-        if str(sys.argv[1]) == "-i":
-            setupsimulator().prettyprint("Installing")
-
+        if setupsimulator().directoryExists(DOWNLOAD_DIR):
+            setupsimulator().removeDirectory(DOWNLOAD_DIR)
+        else:
+            setupsimulator().createDirectory(DOWNLOAD_DIR)
+        """
+        Configure the license.
+        """
+        for l in LICENSES:
+            with open(l) as f:
+                FTPURL = f.readline().strip('\n')
+                PACKAGES = f.readlines()
+            for r in range(len(PACKAGES)):
+                if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + PACKAGES[r].strip('\n'))):
+                    print " * Downloading " + PACKAGES[r].strip('\n')
+                    setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
+        setupsimulator().configureLicense()
+        """
+        Start the installation process if the user agrees with the license.
+        """
+        if setupsimulator().readLicense():
+            setupsimulator().printLine()
             """
-            Check and install missing dependencies.
+            Download the necessary packages. They are stored into the files
+            license and simulator. The first line contains the base URI and the
+            rest of the file contains the packages.
             """
-            setupsimulator().verifyDependencies()
-
-            """
-            Create a directory where all packages will be stored.
-            """
-            if setupsimulator().directoryExists(DOWNLOAD_DIR):
-                setupsimulator().removeDirectory(DOWNLOAD_DIR)
-            else:
-                setupsimulator().createDirectory(DOWNLOAD_DIR)
-            """
-            Configure the license.
-            """
-            for l in LICENSES:
-                with open(l) as f:
+            for download in COMMON_FILES:
+                with open(download) as f:
                     FTPURL = f.readline().strip('\n')
                     PACKAGES = f.readlines()
-                for r in range (len(PACKAGES)):
+                for r in range(len(PACKAGES)):
                     if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + PACKAGES[r].strip('\n'))):
                         print " * Downloading " + PACKAGES[r].strip('\n')
                         setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
-            setupsimulator().configureLicense()
-            """
-            Start the installation process if the user agrees with the license.
-            """
-            if setupsimulator().readLicense():
-                setupsimulator().printLine()
-                """
-                Download the necessary packages. They are stored into the files
-                license and simulator. The first line contains the base URI and the
-                rest of the file contains the packages.
-                """
-                for download in COMMON_FILES:
-                    with open(download) as f:
-                        FTPURL = f.readline().strip('\n')
-                        PACKAGES = f.readlines()
-                    for r in range (len(PACKAGES)):
-                        if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + PACKAGES[r].strip('\n'))):
-                            print " * Downloading " + PACKAGES[r].strip('\n')
-                            setupsimulator().download(FTPURL, PACKAGES[r].strip('\n'), DOWNLOAD_DIR)
 
-                if UBUNTU in setupsimulator().getDistro():
-                    downloadFile = "./packages/distros/ubuntu"
-                elif FEDORA in setupsimulator().getDistro():
-                    downloadFile = "./packages/distros/fedora"
-                else:
-                    downloadFile = "./packages/distros/suserhelcentos"
-                with open(downloadFile) as f:
-                    PACKAGES = f.readlines()
-                    for r in range (len(PACKAGES)):
-                        # brake the file remote location
-                        aux = PACKAGES[r].split("/")
-                        # gets the last index with contains the package name
-                        symPackage = aux[len(aux) - 1]
-                        # remove the last item
-                        aux.pop()
-                        # concatenates creating the URL
-                        FTPURL = '/'.join(aux)
-                        if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + symPackage.strip('\n'))):
-                            print " * Downloading " + symPackage.strip('\n')
-                            setupsimulator().download(FTPURL + "/", symPackage.strip('\n'), DOWNLOAD_DIR)
-
-                setupsimulator().checkSum(DOWNLOAD_DIR, "checklist.md5")
-                """
-                Install the simulator packages for p8 and p9 according the host distro.
-                """
-                for v in VERSIONS:
-                    if not setupsimulator().directoryExists(v):
-                        setupsimulator().printLine()
-                        print "Installing the simulator packages..."
-                        if UBUNTU in setupsimulator().getDistro():
-                            for debPackage in os.listdir(DOWNLOAD_DIR):
-                                if debPackage.endswith(".deb"):
-                                    setupsimulator().installDEB(DOWNLOAD_DIR + "/" + debPackage)
-                        else:
-                            for rpmPackage in os.listdir(DOWNLOAD_DIR):
-                                if rpmPackage.endswith(".rpm"):
-                                    setupsimulator().installRPM(DOWNLOAD_DIR + "/" + rpmPackage)
-
-                """
-                Extract the bzip2 file which contains the Debian sysroot.
-                """
-                FULLPATH = DOWNLOAD_DIR + DISK
-                if not setupsimulator().fileExists(FULLPATH):
-                    if setupsimulator().fileExists(FULLPATH + ".bz2"):
-                        setupsimulator().printLine()
-                        print "Extracting the image (it will take a while)..."
-                        try:
-                            os.system("bzip2 -dkv " + FULLPATH + ".bz2")
-                        except (OSError, IOError):
-                            print "\n   ERROR: could not extract " + FULLPATH + ". Aborting."
-                            sys.exit()
-                    else:
-                        print "\n   ERROR: could not find" + FULLPATH + ".bz2."
-                        print "   exiting now!"
-                        sys.exit()
-
-                if not setupsimulator().fileExists(LOCKFILE):
-                    setupsimulator().printLine()
-                    print "Customizing the image..."
-                    setupsimulator().configureImage(FULLPATH)
-
-                """
-                Configure a symlink to be used by the tcl script.
-                """
-                if not setupsimulator().fileExists(DOWNLOAD_DIR + DISK_SYM_LINK):
-                    os.system("ln -s " + DOWNLOAD_DIR + DISK + " " + DOWNLOAD_DIR + DISK_SYM_LINK)
-
-                """
-                Copy the startsimulator.py to the directory where all files where downloaded.
-                """
-                os.system("cp -rp ./scripts/startsimulator " + DOWNLOAD_DIR)
-                setupsimulator().printLine()
-                print("Execution time: %s seconds." % (time.time() - start_time))
-                print "\nSimulator files are located at " + DOWNLOAD_DIR
-                os.system("cd " + DOWNLOAD_DIR)
-                print "\nRun startsimulator [-p8 or -p9] to start the simulator from the command line or"
-		print "select POWER Simulator > Start from the whithin the SDK."
-		print "\nThe default credentials to access the simulator are: user=root/pwd=mambo"
-        # remove
-        elif str(sys.argv[1]) == "-u":
-            os.system("clear")
-            setupsimulator().prettyprint("Removing")
             if UBUNTU in setupsimulator().getDistro():
-                for p in VERSIONS:
-                    if setupsimulator().directoryExists(p):
-                        setupsimulator().removeDEB(p.split("/")[3])
+                downloadFile = "./packages/distros/ubuntu"
+            elif FEDORA in setupsimulator().getDistro():
+                downloadFile = "./packages/distros/fedora"
             else:
-                for p in VERSIONS:
-                    if setupsimulator().directoryExists(p):
-                        setupsimulator().removeRPM(p.split("/")[3])
+                downloadFile = "./packages/distros/suserhelcentos"
+            with open(downloadFile) as f:
+                PACKAGES = f.readlines()
+                for r in range(len(PACKAGES)):
+                    # brake the file remote location
+                    aux = PACKAGES[r].split("/")
+                    # gets the last index with contains the package name
+                    symPackage = aux[len(aux) - 1]
+                    # remove the last item
+                    aux.pop()
+                    # concatenates creating the URL
+                    FTPURL = '/'.join(aux)
+                    if not (setupsimulator().fileExists(DOWNLOAD_DIR + "/" + symPackage.strip('\n'))):
+                        print " * Downloading " + symPackage.strip('\n')
+                        setupsimulator().download(FTPURL + "/", symPackage.strip('\n'), DOWNLOAD_DIR)
+
+            setupsimulator().checkSum(DOWNLOAD_DIR, "checklist.md5")
+            """
+            Install the simulator packages for p8 and p9 according the host distro.
+            """
+            for v in VERSIONS:
+                if not setupsimulator().directoryExists(v):
+                    setupsimulator().printLine()
+                    print "Installing the simulator packages..."
+                    if UBUNTU in setupsimulator().getDistro():
+                        for debPackage in os.listdir(DOWNLOAD_DIR):
+                            if debPackage.endswith(".deb"):
+                                setupsimulator().installDEB(DOWNLOAD_DIR + "/" + debPackage)
+                    else:
+                        for rpmPackage in os.listdir(DOWNLOAD_DIR):
+                            if rpmPackage.endswith(".rpm"):
+                                setupsimulator().installRPM(DOWNLOAD_DIR + "/" + rpmPackage)
+
+            """
+            Extract the bzip2 file which contains the Debian sysroot.
+            """
+            FULLPATH = DOWNLOAD_DIR + DISK
+            if not setupsimulator().fileExists(FULLPATH):
+                if setupsimulator().fileExists(FULLPATH + ".bz2"):
+                    setupsimulator().printLine()
+                    print "Extracting the image (it will take a while)..."
+                    try:
+                        os.system("bzip2 -dkv " + FULLPATH + ".bz2")
+                    except (OSError, IOError):
+                        print "\n   ERROR: could not extract " + FULLPATH + ". Aborting."
+                        sys.exit()
+                else:
+                    print "\n   ERROR: could not find" + FULLPATH + ".bz2."
+                    print "   exiting now!"
+                    sys.exit()
+
+            if not setupsimulator().fileExists(LOCKFILE):
+                setupsimulator().printLine()
+                print "Customizing the image..."
+                setupsimulator().configureImage(FULLPATH)
+
+            """
+            Configure a symlink to be used by the tcl script.
+            """
+            if not setupsimulator().fileExists(DOWNLOAD_DIR + DISK_SYM_LINK):
+                os.system("ln -s " + DOWNLOAD_DIR + DISK + " " + DOWNLOAD_DIR + DISK_SYM_LINK)
+
+            """
+            Copy the startsimulator.py to the directory where all files where downloaded.
+            """
+            os.system("cp -rp ./scripts/startsimulator " + DOWNLOAD_DIR)
             setupsimulator().printLine()
             print("Execution time: %s seconds." % (time.time() - start_time))
+            print "\nSimulator files are located at " + DOWNLOAD_DIR
+            os.system("cd " + DOWNLOAD_DIR)
+            print "\nRun startsimulator [-p8 or -p9] to start the simulator from the command line or"
+            print "select POWER Simulator > Start from the whithin the SDK."
+            print "\nThe default credentials to access the simulator are: user=root/pwd=mambo"
+    # remove
+    elif str(sys.argv[1]) == "-u":
+        os.system("clear")
+        setupsimulator().prettyprint("Removing")
+        if UBUNTU in setupsimulator().getDistro():
+            for p in VERSIONS:
+                if setupsimulator().directoryExists(p):
+                    setupsimulator().removeDEB(p.split("/")[3])
         else:
-            print "Could not proceed with the script execution."
-            sys.exit()
+            for p in VERSIONS:
+                if setupsimulator().directoryExists(p):
+                    setupsimulator().removeRPM(p.split("/")[3])
+        setupsimulator().printLine()
+        print("Execution time: %s seconds." % (time.time() - start_time))
+    else:
+        print "Could not proceed with the script execution."
+        sys.exit()
 except (KeyboardInterrupt, SystemExit, RuntimeError):
     sys.exit()

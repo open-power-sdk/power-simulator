@@ -33,27 +33,28 @@ import sys
 import os
 import pwd
 
+
 class startsimulator():
 
-    #get username
+    """get username"""
     def getUserName(self):
             return pwd.getpwuid(os.getuid())[0]
 
-    #set the tap0 network interface
+    """set the tap0 network interface"""
     def setNetwork(self):
-        os.system ("clear")
+        os.system("clear")
         print "\n\nConfiguring network...\n"
-        os.system ("sudo tunctl -u " + self.getUserName() + " -t tap0")
-        os.system ("sudo ifconfig tap0 172.19.98.108 netmask 255.255.255.254")
-        os.system ("sudo iptables -t nat -A POSTROUTING -j MASQUERADE")
-        os.system ("sudo iptables -I FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
-        os.system ("sudo iptables -I FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT")
-        os.system ("sudo sysctl -w net.ipv4.ip_forward=1 $2>&1")
-        os.system ("sudo -k")
+        os.system("sudo tunctl -u " + self.getUserName() + " -t tap0")
+        os.system("sudo ifconfig tap0 172.19.98.108 netmask 255.255.255.254")
+        os.system("sudo iptables -t nat -A POSTROUTING -j MASQUERADE")
+        os.system("sudo iptables -I FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
+        os.system("sudo iptables -I FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT")
+        os.system("sudo sysctl -w net.ipv4.ip_forward=1 $2>&1")
+        os.system("sudo -k")
 
-    #unset the tap0 network interface
+    """unset the tap0 network interface"""
     def unsetNetwork(self):
-        os.system ("clear")
+        os.system("clear")
         print "\n\nRemoving network configuration...\n"
         os.system("sudo tunctl -d tap0")
         os.system("sudo iptables -D FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
@@ -61,7 +62,7 @@ class startsimulator():
         os.system("sudo iptables -t nat -D POSTROUTING -j MASQUERADE")
         os.system("sudo -k")
 
-    #start the simulator
+    """start the simulator"""
     def startSimulator(self):
         os.system("clear")
         if len(sys.argv) > 2 or len(sys.argv) < 2:
@@ -85,6 +86,8 @@ class startsimulator():
             else:
                 print "Could not execute this script."
                 sys.exit()
+
+
 '''
 #############  Here starts the main execution #############
 '''
