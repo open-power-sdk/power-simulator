@@ -1,0 +1,118 @@
+#!/bin/bash
+set +e
+: '
+
+Copyright (C) 2017 IBM Corporation
+
+Licensed under the Apache License, Version 2.0 (the “License”);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an “AS IS” BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+	Contributors:
+		* Rafael Sene <rpsene@br.ibm.com>
+'
+
+DIR=$(basename "$PWD")
+
+createVirtEnv(){
+	virtualenv $DIR
+	source $DIR/bin/activate
+	return $TRUE
+}
+
+destroyVirtEnv(){
+	deactivate
+	clean
+	return $TRUE
+}
+
+clean(){
+	rm -rf ./$DIR
+	rm -rf ./*egg*
+	rm -rf ./build
+	rm -rf ./dist
+}
+
+buildRun(){
+	createVirtEnv
+	python ./setup.py install
+	mambo -h
+	destroyVirtEnv
+	clean
+	return $TRUE
+}
+
+buildInstall(){
+	clean
+	python ./setup.py sdist
+	python ./setup.py check -m
+    sudo pip install --upgrade ./dist/*.tar.gz
+	return $TRUE
+}
+
+buildClean(){
+	clean
+	python ./setup.py clean --all
+	python ./setup.py build
+	return $TRUE
+}
+
+buildCleanAll(){
+	clean
+	return $TRUE
+}
+
+buildRelease(){
+	clean
+	python ./setup.py sdist
+	python ./setup.py check -m
+	return $TRUE
+}
+
+
+#read the inputs
+if [ $# -ne 1 ]; then
+    echo "usage: dev [ build | release | run | clean | -h or --help ]"
+    exit 1
+fi
+
+# overwrite timestamp in setup.py file
+buildtime=$(date +%Y%m%d%H%M%S)
+sed -i -e "s/timestamp/$buildtime/g" setup.py
+tool=${PWD##*/}
+
+
+if [[ "$1" == "build" ]]; then
+    buildClean
+elif [[ "$1" == "install" ]]; then
+    buildInstall
+elif [[ "$1" == "run" ]]; then
+    buildRun $tool
+elif [[ "$1" == "clean" ]]; then
+    buildCleanAll
+elif [[ "$1" == "release" ]]; then
+    buildRelease
+elif [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+    echo
+    echo "      usage: dev [clean | tests | release]"
+    echo
+	echo "     * clean: excute a new clean build which do not install or
+    allow execute. Useful for integrity verification."
+    echo
+	echo "     * release: creates all the necessary packages to distribute
+    the application."
+    echo
+	echo "     * run: creates a virtual environment where the application
+    is installed and executed"
+else
+	echo "Please, enter the correct command."
+	echo "usage: dev [ build | install | release | run | clean | -h or --help ]"
+fi
