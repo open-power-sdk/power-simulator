@@ -31,7 +31,7 @@ REQUIREMENTS = [str(required.req) for required in REQUIREMENTS_LIST]
 
 setup(
     name='mambo',
-    version='1.0.20170404165216',
+    version='1.0.timestamp',
     description='IBM POWER8 and POWER9 Functional Simulator',
     long_description=README,
     author='Rafael Peria de Sene',
