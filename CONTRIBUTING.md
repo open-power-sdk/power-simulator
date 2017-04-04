@@ -1,11 +1,11 @@
 ### Welcome
 
-We welcome contributions to the Power Simulator Project in many forms, and there's always plenty to do!
+We welcome contributions to the Power Functional Simulator Setup Project in many forms, and there's always plenty to do!
 
 First things first, please review the Power Simulator Project's [Code of Conduct](https://github.com/hyperledger/hyperledger/wiki/Hyperledger-Project-Code-of-Conduct) before participating. It is important that we keep things civil.
 
 ### Getting help
-If you are looking for something to work on, or need some expert assistance in debugging a problem or working out a fix to an issue, our community is always eager to help. We hang out on [Slack](https://XXX.slack.com/), IRC (#XXX on freenode.net) and the [mailing lists](http://example.com/). \[TODO] create mailing list
+If you are looking for something to work on, or need some expert assistance in debugging a problem or working out a fix to an issue, our community is always eager to help. We hang out on [Slack](https://toolsforpower.slack.org/).
 
 ### Reporting bugs
 If you are a user and you find a bug, please submit an [issue](https://github.com/ORG/REPO/issues). Please try to provide sufficient information for someone else to reproduce the issue. One of the project's maintainers should respond to your issue within 24 hours. If not, please bump the issue and request that it be reviewed.
@@ -47,11 +47,7 @@ To work on something, whether a new feature or a bugfix:
 
    _Note: if your PR does not merge cleanly, use ```git rebase master``` in your feature branch to update your pull request rather than using ```git merge master```_.
 
-  8. Did we mention tests? All code changes should be accompanied by new or modified tests.
-
-  9. Continuous Integration (CI): Be sure to check [Travis](https://travis-ci.org/) or the Slack [#ci-status](https://XXX.slack.com/messages/ci-status) channel for status of your build.
-
-  10. Any code changes that affect documentation should be accompanied by corresponding changes (or additions) to the documentation and tests. This will ensure that if the merged PR is reversed, all traces of the change will be reversed as well.
+  8. Any code changes that affect documentation should be accompanied by corresponding changes (or additions) to the documentation and tests. This will ensure that if the merged PR is reversed, all traces of the change will be reversed as well.
 
 After your Pull Request (PR) has been reviewed and signed off, a maintainer will merge it into the master branch.
 
