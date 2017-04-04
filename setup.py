@@ -23,7 +23,7 @@ limitations under the License.
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
 
-with open('README.rst') as f:
+with open('README.md') as f:
     README = f.read()
 
 REQUIREMENTS_LIST = parse_requirements('./requirements.txt', session=False)
@@ -31,7 +31,7 @@ REQUIREMENTS = [str(required.req) for required in REQUIREMENTS_LIST]
 
 setup(
     name='mambo',
-    version='1.0.timestamp',
+    version='1.0.20170404165216',
     description='IBM POWER8 and POWER9 Functional Simulator',
     long_description=README,
     author='Rafael Peria de Sene',
