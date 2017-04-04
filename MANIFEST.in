@@ -2,3 +2,5 @@ include requirements.txt
 recursive-include data *
 include mambo/resources/*.config
 include mambo/resources/distros/*.config
+include README.md
+include LICENSE
