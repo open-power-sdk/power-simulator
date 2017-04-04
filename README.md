@@ -28,15 +28,16 @@ Build and install: ./dev install
 
 usage: mambo [-h] [-V | -i | -s {power8,power9}]
 
---- Power Functional Simulator Setup ---
 Configures and starts the IBM POWER8 and POWER9 Functional Simulator
 
 optional arguments:
   -h, --help            show this help message and exit
+  
   -V, --version         show program's version number and exit
+  
   -i, --install         install the simulator and its dependencies
-  -s {power8,power9}, --start {power8,power9}
-                        start the a selected version of the simulator
+  
+  -s {power8,power9}, --start {power8,power9}       start the a selected version of the simulator
 
 
 ## Still Have Questions?
