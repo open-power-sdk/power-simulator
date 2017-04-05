@@ -24,14 +24,15 @@ Build: ./dev release
 
 Build and install: ./dev install
 
+Execution: mambo --help
+
 ## Documentation
 
 usage: mambo [-h] [-V | -i | -s {power8,power9}]
 
 Configures and starts the IBM POWER8 and POWER9 Functional Simulator
 
-optional arguments:
-  -h, --help            show this help message and exit
+  -h, --help            show the help message and exit
   
   -V, --version         show program's version number and exit
   
