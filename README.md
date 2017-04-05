@@ -1,3 +1,5 @@
+https://travis-ci.org/open-power-sdk/power-simulator.svg?branch=master
+
 # Project Description
 The Power Functional Simulator Setup aims to easy the setup and startup of the IBM POWER Functional Simulator. It automatizes all the required procedures like dependencies
 installation, network configuration and the simulator usage.
