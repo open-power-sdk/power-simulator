@@ -2,9 +2,6 @@ language: python
 python:
   - "2.7"
 # command to install dependencies
-install: 
-        "pip install pylint"
-        "pip install virtualenv"
-        "pip install docsutil"
+install: "pip install pylint virtualenv docsutil"
 # command to build
 script: bundle ./dev release
