@@ -4,4 +4,4 @@ python:
 # command to install dependencies
 install: "pip install pylint virtualenv"
 # command to build
-script: bundle ./dev release
+script: bundle cd ./power-simulator && ./dev release
