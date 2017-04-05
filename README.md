@@ -48,4 +48,4 @@ For general purpose questions, please use [StackOverflow](http://stackoverflow.c
 The Power Functional Simulator Setup Project uses the [Apache License Version 2.0](LICENSE) software license.
 
 ## Related information
-[POWER Functional Simulator] (https://www-304.ibm.com/webapp/set2/sas/f/pwrfs/pwr9/home.html)
+[POWER Functional Simulator](https://www-304.ibm.com/webapp/set2/sas/f/pwrfs/pwr9/home.html)
