@@ -219,12 +219,12 @@ class SetupSimulator(object):
             print "\n   ERROR: could not download " + file_name
             print "   " + base_url + " is not available."
 
-    def check_sum(self, location, checksumfile):
+    def check_sum(self, location):
         '''verifies the packages integrity'''
         self.print_line()
         if self.file_exists(location + checksumfile):
             print "Checking the files integrity..."
-            self.execute_cmd('cd ' + location + ' && md5sum -c ' + checksumfile)
+            self.execute_cmd('cd ' + location + ' && md5sum -c *.md5')
         else:
             print '\n   ERROR: could not verify the files integrity.'
             print "   " + checksumfile + ' is not available.'

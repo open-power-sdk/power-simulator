@@ -59,7 +59,7 @@ def run(args):
             download_common_pckg(var.COMMON_FILES, var.DOWNLOAD_DIR, setup)
             download_by_distro(setup.get_distro(), var.DIR_PATH,
                                var.DOWNLOAD_DIR, setup)
-            setup.check_sum(var.DOWNLOAD_DIR, "checklist.md5")
+            setup.check_sum(var.DOWNLOAD_DIR)
             install_packages(var.VERSIONS, var.DOWNLOAD_DIR, setup)
             extract_img(var.DISK, var.DOWNLOAD_DIR, setup)
             # customize_img(var.DISK, var.LOCKFILE, var.MOUNT_POINT,
