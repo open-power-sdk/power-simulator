@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/open-power-sdk/power-simulator.svg?branch=master)](https://travis-ci.org/open-power-sdk/power-simulator)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/22833b5348fb4fdf80ea370560648c0b)](https://www.codacy.com/app/Codacy/codacy-bandit?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=codacy/codacy-bandit&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8de3fc4949eb4392a5b6232b9928ce77)](https://www.codacy.com/app/rpsene/power-simulator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=open-power-sdk/power-simulator&amp;utm_campaign=Badge_Grade)
 
 # Project Description
 The Power Functional Simulator Setup aims to easy the setup and startup of the IBM POWER Functional Simulator. It automatizes all the required procedures like dependencies
