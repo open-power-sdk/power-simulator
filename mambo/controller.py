@@ -99,7 +99,8 @@ def download_license(licenses, download_directory, setup_simulator):
             fname = download_directory + "/" + packages[pckg].strip('\n')
             if not setup_simulator.file_exists(fname):
                 print " * Downloading " + packages[pckg].strip('\n')
-                setup_simulator.download(ftp_url, packages[pckg].strip('\n'),
+                setup_simulator.download(ftp_url + packages[pckg].strip('\n'),
+                                         packages[pckg].strip('\n'),
                                          download_directory)
     setup_simulator.configure_license()
 
@@ -120,7 +121,8 @@ def download_common_pckg(common_files, download_directory, setup_simulator):
             fname = download_directory + "/" + packages[pkg].strip('\n')
             if not setup_simulator.file_exists(fname):
                 print " * Downloading " + packages[pkg].strip('\n')
-                setup_simulator.download(ftpurl, packages[pkg].strip('\n'),
+                setup_simulator.download(ftpurl + packages[pkg].strip('\n'),
+                                         packages[pkg].strip('\n'),
                                          download_directory)
 
 
@@ -138,18 +140,12 @@ def download_by_distro(distro, dir_path, download_directory, setup_simulator):
         packages = fdownload.readlines()
         size = len(packages)
         for pkg in range(size):
-            # brake the file remote location
-            aux = packages[pkg].split("/")
-            # gets the last index with contains the package name
-            sim_package = aux[len(aux) - 1]
-            # remove the last item
-            aux.pop()
-            # concatenates creating the URL
-            ftpurl = '/'.join(aux)
+            sim_package = packages[pkg].split("/")[-1]
             fname = download_directory + "/" + sim_package.strip('\n')
             if not setup_simulator.file_exists(fname):
                 print " * Downloading " + sim_package.strip('\n')
-                setup_simulator.download(ftpurl + "/", sim_package.strip('\n'),
+                setup_simulator.download(packages[pkg],
+                                         sim_package.strip('\n'),
                                          download_directory)
 
 

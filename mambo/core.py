@@ -200,11 +200,11 @@ class SetupSimulator(object):
             value = value / 1024.0
         return "%.1f%s%s" % (value, 'Yi', 'B')
 
-    def download(self, base_url, file_name, location):
+    def download(self, file_full_url, file_name, location):
         '''download'''
         try:
             block_size = 10240
-            url_info = urllib2.urlopen(base_url + file_name)
+            url_info = urllib2.urlopen(file_full_url)
             download_file = open(location + "/" + file_name, 'wb')
             download_meta_info = url_info.info()
             clength = int(download_meta_info.getheaders("Content-Length")[0])
@@ -218,7 +218,7 @@ class SetupSimulator(object):
             print "done."
         except (OSError, IOError):
             print "\n   ERROR: could not download " + file_name
-            print "   " + base_url + " is not available."
+            print "   " + file_full_url + " is not available."
             sys.exit(1)
 
     def check_sum(self, location):
