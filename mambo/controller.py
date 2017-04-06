@@ -66,18 +66,14 @@ def run(args):
             #               var.DOWNLOAD_DIR, setup)
             create_symlink(var.DISK_SYM_LINK, var.DISK, var.DOWNLOAD_DIR,
                            setup)
-            print "\nRun startsimulator [-p8 or -p9] to start the simulator"
-            print "\nThe default credentials to access the simulator are:"
-            print " user = root"
-            print " password = mambo"
-            print "\nSimulator files are located at " + var.DOWNLOAD_DIR
-            os.system("cd " + var.DOWNLOAD_DIR)
+            if setup.cmd_exists('mambo'):
+                setup.execute_cmd('mambo --help')
         print "Execution time: %s seconds." % (time.time() - start_time)
     elif args.start:
         try:
             start_simulator(args.start, setup)
         except (KeyboardInterrupt, SystemExit, RuntimeError):
-            raise
+            exit(1)
 
 
 def create_directory(target_directory, setup_simulator):
@@ -188,7 +184,8 @@ def extract_img(disk_img, download_directory, setup_simulator):
             if setup_simulator.file_exists(full_img_path + ".bz2"):
                 setup_simulator.print_line()
                 print "Extracting the image (it will take a while)..."
-                os.system("bzip2 -dkv " + full_img_path + ".bz2")
+                cmd = "bzip2 -dkv " + full_img_path + ".bz2"
+                setup_simulator.execute_cmd(cmd)
     except (KeyboardInterrupt, SystemExit, RuntimeError):
         raise
 
@@ -213,38 +210,45 @@ def create_symlink(sym_link, disk, download_directory, setup_simulator):
     '''
     if not setup_simulator.file_exists(download_directory + sym_link):
         cmd = download_directory + disk + " " + download_directory + sym_link
-        os.system("ln -s " + cmd)
+        setup_simulator.execute_cmd("ln -s " + cmd)
 
 
-def set_network():
+def set_network(setup_simulator):
     '''
     Set the tap0 network interface and allocate a valid
     IP for it. The img used with the simulator has it
     IP address already set.
     '''
-    print "\n\nConfiguring network...\n"
+    print "\n\nConfiguring network to access the simulator...\n"
     ip_address = "172.19.98.108/16"
-    netmask = " netmask 255.255.255.254"
-    broadcast = " broadcast 172.19.255.255"
-    os.system("sudo ip tuntap add tap0 mode tap")
-    os.system("sudo ifconfig tap0 " + ip_address + netmask + broadcast)
-    os.system("sudo iptables -t nat -A POSTROUTING -j MASQUERADE")
-    os.system("sudo iptables -I FORWARD -s " + ip_address + " -i tap0 -j ACCEPT")
-    os.system("sudo iptables -I FORWARD -d " + ip_address + " -o tap0 -j ACCEPT")
-    os.system("sudo sysctl -w net.ipv4.ip_forward=1 $2>&1")
-    os.system("sudo -k")
+    netmask = "netmask 255.255.255.254"
+    broadcast = "broadcast 172.19.255.255"
+    set_ip_cmds = [
+        'ip tuntap add tap0 mode tap',
+        'ifconfig tap0 ' + ip_address + ' ' + netmask + ' ' + broadcast,
+        'iptables -t nat -A POSTROUTING -j MASQUERADE',
+        'iptables -I FORWARD -s ' + ip_address + ' -i tap0 -j ACCEPT',
+        'iptables -I FORWARD -d ' + ip_address + ' -o tap0 -j ACCEPT',
+        '-k'
+    ]
+    for cmd in set_ip_cmds:
+        setup_simulator.execute_cmd('sudo ' + cmd)
 
 
-def unset_network():
+def unset_network(setup_simulator):
     '''
     Unset the tap0 network interface
     '''
-    print "\n\nRemoving network configuration...\n"
-    os.system("sudo ip tuntap del tap0 mode tap")
-    os.system("sudo iptables -D FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT")
-    os.system("sudo iptables -D FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT")
-    os.system("sudo iptables -t nat -D POSTROUTING -j MASQUERADE")
-    os.system("sudo -k")
+    print "\n\nRemoving network configuration to access the simulator...\n"
+    unset_ip_cmds = [
+        'ip tuntap del tap0 mode tap',
+        'iptables -D FORWARD -s 172.19.0.0/16 -i tap0 -j ACCEPT',
+        'iptables -D FORWARD -d 172.19.0.0/16 -o tap0 -j ACCEPT',
+        'iptables -t nat -D POSTROUTING -j MASQUERADE',
+        '-k'
+    ]
+    for cmd in unset_ip_cmds:
+        setup_simulator.execute_cmd('sudo ' + cmd)
 
 
 def start_simulator(version, setup_simulator):
@@ -253,11 +257,15 @@ def start_simulator(version, setup_simulator):
     '''
     if setup_simulator.show_connection_info(version):
         os.chdir(var.DOWNLOAD_DIR)
-        set_network()
+        set_network(setup_simulator)
         if 'power8' in version:
-            os.system("/opt/ibm/systemsim-p8/run/pegasus/power8 -W -f\
-            /opt/ibm/systemsim-p8/run/pegasus/linux/boot-linux-le.tcl")
+            p8_prefix = '/opt/ibm/systemsim-p8/run/pegasus/'
+            p8_sim = p8_prefix + 'power8 -W -f'
+            p8_tcl = p8_prefix + 'linux/boot-linux-le.tcl'
+            setup_simulator.execute_cmd(p8_sim + ' ' + p8_tcl)
         elif 'power9' in version:
-            os.system("/opt/ibm/systemsim-p9/run/p9/power9 -W -f \
-            /opt/ibm/systemsim-p9/run/p9/linux/boot-linux-le-skiboot.tcl")
-        unset_network()
+            p9_prefix = '/opt/ibm/systemsim-p9/run/p9/'
+            p9_sim = p9_prefix + 'power9 -W -f'
+            p9_tcl = p9_prefix + 'linux/boot-linux-le-skiboot.tcl'
+            setup_simulator.execute_cmd(p9_sim + ' ' + p9_tcl)
+        unset_network(setup_simulator)

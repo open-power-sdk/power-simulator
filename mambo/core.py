@@ -45,15 +45,10 @@ class SetupSimulator(object):
             return lines[0].split("=", 1)[1].replace("\"", "")
 
     @staticmethod
-    def execute_cmd(command, arguments):
+    def execute_cmd(command):
         '''execute a cmd'''
-        cmd = [command, arguments]
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   stdin=subprocess.PIPE)
-        out, err = process.communicate()
-        print err
-        return out
+        subp = subprocess.call(command, shell=True)
+        return subp == 0
 
     @staticmethod
     def cmd_exists(command):
@@ -76,10 +71,9 @@ class SetupSimulator(object):
         '''get username'''
         return pwd.getpwuid(os.getuid())[0]
 
-    @staticmethod
-    def clear():
+    def clear(self):
         '''clear the terminal'''
-        os.system("clear")
+        self.execute_cmd("clear")
 
     @staticmethod
     def directory_exists(location):
@@ -103,7 +97,7 @@ class SetupSimulator(object):
         opt = raw_input(" * Would you like to clean " + location + "? [Y/N] ")
         if "Y" in opt or "y" in opt:
             if self.directory_exists(location):
-                os.system("rm -rf " + location + "/*")
+                self.execute_cmd("rm -rf " + location + "/*")
                 self.print_line()
         elif "N" in opt or "n" in opt:
             pass
@@ -115,65 +109,60 @@ class SetupSimulator(object):
         '''install RPM file'''
         try:
             if self.cmd_exists("dnf"):
-                os.system("sudo dnf install -y " + package)
+                self.execute_cmd('sudo dnf install -y ' + package)
             elif self.cmd_exists("zypper"):
-                os.system("sudo zypper --non-interactive install " + package)
+                self.execute_cmd('sudo zypper --non-interactive install ' + package)
             else:
-                os.system("sudo yum install -y " + package)
+                self.execute_cmd('sudo yum install -y ' + package)
         except (KeyboardInterrupt, SystemExit, RuntimeError):
-            raise
+            exit(1)
 
-    @staticmethod
-    def install_deb(package):
+    def install_deb(self, package):
         '''install DEB file'''
         try:
-            os.system("sudo dpkg -i " + package)
-            os.system("sudo apt-get -fy install")
+            self.execute_cmd('sudo dpkg -i ' + package)
+            self.execute_cmd('sudo apt-get -fy install')
         except (KeyboardInterrupt, SystemExit, RuntimeError):
             raise
 
-    @staticmethod
-    def install_deb_apt(package):
+    def install_deb_apt(self, package):
         '''install DEB file via apt-get'''
         try:
-            os.system("sudo apt-get -y install " + package)
+            self.execute_cmd('sudo apt-get -y install ' + package)
         except (KeyboardInterrupt, SystemExit, RuntimeError):
             raise
 
-    @staticmethod
-    def remove_rpm(package):
+    def remove_rpm(self, package):
         '''remove RPM file'''
         try:
-            os.system("sudo rpm -e " + package)
+            self.execute_cmd('sudo rpm -e ' + package)
         except (KeyboardInterrupt, SystemExit, RuntimeError):
             raise
 
-    @staticmethod
-    def remove_deb(package):
+    def remove_deb(self, package):
         '''remove DEB file'''
         try:
-            os.system("sudo apt-get purge -y " + package)
+            self.execute_cmd('sudo apt-get purge -y ' + package)
         except (KeyboardInterrupt, SystemExit, RuntimeError):
             raise
 
-    @staticmethod
-    def configure_image(disk_img, lock, mount_point):
+    def configure_image(self, disk_img, lock, mount_point):
         '''configure the image, copying the configurerepos.sh into it.'''
         try:
             # create mount point
-            os.system("sudo mkdir " + mount_point)
+            self.execute_cmd('sudo mkdir ' + mount_point)
             # mount images
-            os.system("sudo mount -o loop " + disk_img + " " + mount_point)
+            self.execute_cmd('sudo mount -o loop ' + disk_img + ' ' + mount_point)
             # copy file inside the images
             mtp = mount_point + "/home"
-            cmd = "sudo cp -rp " + var.DOWNLOAD_DIR + "configurerepos.sh "
-            os.system(cmd + mtp)
+            cmd = var.DOWNLOAD_DIR + 'configurerepos.sh' + ' ' + mtp
+            self.execute_cmd('sudo cp -rp ' + cmd)
             # umount
-            os.system("sudo umount " + mount_point)
+            self.execute_cmd('sudo umount ' + mount_point)
             # remove mount point
-            os.system("sudo rm -rf " + mount_point)
+            self.execute_cmd('sudo rm -rf ' + mount_point)
             # create lock file that block continuing customization
-            os.system("touch " + lock)
+            self.execute_cmd('touch ' + lock)
             print "done"
         except (KeyboardInterrupt, SystemExit, RuntimeError, OSError, IOError):
             print "\n   ERROR: could not configure the " + disk_img
@@ -235,10 +224,10 @@ class SetupSimulator(object):
         self.print_line()
         if self.file_exists(location + checksumfile):
             print "Checking the files integrity..."
-            os.system("cd " + location + " && md5sum -c " + checksumfile)
+            self.execute_cmd('cd ' + location + ' && md5sum -c ' + checksumfile)
         else:
-            print "\n   ERROR: could not verify the files integrity. The file " + checksumfile
-            print "   " + "is not available."
+            print '\n   ERROR: could not verify the files integrity.'
+            print "   " + checksumfile + ' is not available.'
 
     @staticmethod
     def configure_license():
@@ -259,20 +248,20 @@ class SetupSimulator(object):
             self.print_line()
             opt = raw_input(" * Would you like to read the license? [Y/N] ")
             if "Y" in opt or "y" in opt:
-                os.system("vi " + var.LICENSE)
+                self.execute_cmd('vi ' + var.LICENSE)
                 print ""
             elif "N" in opt or "n" in opt:
                 pass
             else:
-                print "    * Please, select one of the available options: Y or N"
-                sys.exit()
+                print " * Please, select one of the available options: Y or N"
+                sys.exit(0)
             # ask if the user agrees with the license
             opt = raw_input(" * Do you agree with the license? [Y/N] ")
             if "Y" in opt or "y" in opt:
                 return True
             else:
                 self.print_line()
-                sys.exit()
+                sys.exit(0)
         except (KeyboardInterrupt, SystemExit, RuntimeError):
             sys.exit(1)
 
