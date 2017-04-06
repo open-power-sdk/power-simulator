@@ -28,6 +28,7 @@ import os
 import sys
 import pwd
 import socket
+import glob
 import variables as var
 
 
@@ -83,7 +84,7 @@ class SetupSimulator(object):
     @staticmethod
     def file_exists(location):
         '''check if a file exists'''
-        return os.path.isfile(location)
+        return glob.glob(location)
 
     def create_directory(self, location):
         '''create a directory'''
@@ -222,12 +223,13 @@ class SetupSimulator(object):
     def check_sum(self, location):
         '''verifies the packages integrity'''
         self.print_line()
-        if self.file_exists(location + checksumfile):
+        if self.file_exists(location + '*.md5'):
             print "Checking the files integrity..."
             self.execute_cmd('cd ' + location + ' && md5sum -c *.md5')
         else:
             print '\n   ERROR: could not verify the files integrity.'
-            print "   " + checksumfile + ' is not available.'
+            print '     checksumfile file is not available.'
+            sys.exit(1)
 
     @staticmethod
     def configure_license():
@@ -240,6 +242,7 @@ class SetupSimulator(object):
             open(var.LICENSE, 'wb').write(licensetext)
         except (OSError, IOError):
             print "\n   ERROR: could not configure the license."
+            sys.exit(1)
 
     def read_license(self):
         '''read license'''
