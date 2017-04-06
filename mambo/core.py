@@ -219,6 +219,7 @@ class SetupSimulator(object):
         except (OSError, IOError):
             print "\n   ERROR: could not download " + file_name
             print "   " + base_url + " is not available."
+            sys.exit(1)
 
     def check_sum(self, location):
         '''verifies the packages integrity'''

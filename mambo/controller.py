@@ -186,6 +186,7 @@ def extract_img(disk_img, download_directory, setup_simulator):
                 print "Extracting the image (it will take a while)..."
                 cmd = "bzip2 -dkv " + full_img_path + ".bz2"
                 setup_simulator.execute_cmd(cmd)
+                print
     except (KeyboardInterrupt, SystemExit, RuntimeError):
         raise
 
