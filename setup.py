@@ -36,7 +36,7 @@ setup(
     long_description=README,
     author='Rafael Peria de Sene',
     author_email='rpsene@br.ibm.com',
-    url='https://www-304.ibm.com/webapp/set2/sas/f/lopdiags/sdklop.html',
+    url='https://developer.ibm.com/linuxonpower/sdk/',
     license='Apache Software License 2.0',
     install_requires=REQUIREMENTS,
     packages=find_packages(exclude=("tests",)),
