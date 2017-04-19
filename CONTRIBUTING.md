@@ -5,7 +5,7 @@ We welcome contributions to the Power Functional Simulator Setup Project in many
 First things first, please review the Power Simulator Project's [Code of Conduct](https://github.com/hyperledger/hyperledger/wiki/Hyperledger-Project-Code-of-Conduct) before participating. It is important that we keep things civil.
 
 ### Getting help
-If you are looking for something to work on, or need some expert assistance in debugging a problem or working out a fix to an issue, our community is always eager to help. We hang out on [Slack](https://toolsforpower.slack.org/).
+If you are looking for something to work on, or need some expert assistance in debugging a problem or working out a fix to an issue, our community is always eager to help. We hang out on [Slack](https://toolsforpower.slack.com/).
 
 ### Reporting bugs
 If you are a user and you find a bug, please submit an [issue](https://github.com/open-power-sdk/power-simulator/issues). Please try to provide sufficient information for someone else to reproduce the issue. One of the project's maintainers should respond to your issue within 24 hours. If not, please bump the issue and request that it be reviewed.
