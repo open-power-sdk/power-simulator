@@ -95,16 +95,11 @@ class SetupSimulator(object):
     def remove_directory(self, location):
         '''clean a directory'''
         self.print_line()
-        opt = raw_input(" * Would you like to clean " + location + "? [Y/N] ")
+        opt = raw_input(" * Would you like to clean " + location + "? [y/N] ")
         if "Y" in opt or "y" in opt:
             if self.directory_exists(location):
                 self.execute_cmd("rm -rf " + location + "/*")
                 self.print_line()
-        elif "N" in opt or "n" in opt:
-            pass
-        else:
-            print "    * Please, select one of the available options: Y or N"
-            sys.exit(1)
 
     def install_rpm(self, package):
         '''install RPM file'''
@@ -250,17 +245,14 @@ class SetupSimulator(object):
         try:
             # ask if the user wants to read the license
             self.print_line()
-            opt = raw_input(" * Would you like to read the license? [Y/N] ")
-            if "Y" in opt or "y" in opt:
-                self.execute_cmd('vi ' + var.LICENSE)
-                print ""
-            elif "N" in opt or "n" in opt:
+            opt = raw_input(" * Would you like to read the license? [Y/n] ")
+            if "N" in opt or "n" in opt:
                 pass
             else:
-                print " * Please, select one of the available options: Y or N"
-                sys.exit(0)
+                self.execute_cmd('vi ' + var.LICENSE)
+                print ""
             # ask if the user agrees with the license
-            opt = raw_input(" * Do you agree with the license? [Y/N] ")
+            opt = raw_input(" * Do you agree with the license? [y/N] ")
             if "Y" in opt or "y" in opt:
                 return True
             else:
@@ -273,8 +265,8 @@ class SetupSimulator(object):
     def pretty_print(action):
         '''print the initial message'''
         print "\n " + action + " the POWER Functional Simulator.\n"
-        print " WARNING: Ensure you are running this script as an user"
-        print "          with admin rights. You will be prompt to enter"
+        print " WARNING: Ensure you are running this script as a user"
+        print "          with admin rights. You will be prompted to enter"
         print "          your password during this process.\n"
 
     @staticmethod
@@ -292,12 +284,10 @@ class SetupSimulator(object):
             print 'credentials to access it via ssh:\n'
             print '     ssh root@172.19.98.109'
             print '     password: mambo'
-            opt = raw_input("\n     Would you like to start it now? [Y/N] ")
-            if "Y" in opt or "y" in opt:
-                return True
-            elif "N" in opt or "n" in opt:
+            opt = raw_input("\n     Would you like to start it now? [Y/n] ")
+            if "N" in opt or "n" in opt:
                 sys.exit(0)
             else:
-                print "    Please, select one of the available options: Y or N"
+                return True
         except (KeyboardInterrupt, SystemExit, RuntimeError):
             sys.exit(1)
