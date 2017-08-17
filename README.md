@@ -27,7 +27,11 @@ Build: ./dev release
 
 Build and install: ./dev install
 
-Execution: mambo --help
+## Usage
+
+Install simulator: mambo --install
+
+Run simulator: mambo --start {power8,power9}
 
 ## Documentation
 
